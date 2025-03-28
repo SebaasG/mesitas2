@@ -1,23 +1,29 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config(); // Carga variables de entorno
+const path = require('path');
+require('dotenv').config(); // Cargar variables de entorno
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-// Variables de entorno
 const PORT = process.env.PORT || 3000;
 const ENV = process.env.ENV || 'local'; // Puede ser 'local' o 'production'
-const BASE_URL = ENV === 'production' ? 'https://www.mesitas2.com' : `http://localhost:${PORT}`;
 
-// Rutas de prueba
-app.get('/', (req, res) => {
-    res.send(`Servidor corriendo en modo ${ENV}. URL: ${BASE_URL}`);
-});
+// Ruta absoluta del frontend
+const frontendPath = path.resolve(__dirname, '../../frontend');
+
+// 🔹 Si está en producción, servimos el frontend desde Express
+if (ENV === 'production') {
+    app.use(express.static(frontendPath));
+} else {
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(frontendPath, 'index.html'));
+    });
+}
 
 // Iniciar servidor
 app.listen(PORT, () => {
-    console.log(`✅ Servidor corriendo en: ${BASE_URL}`);
+    const url = ENV === 'local' ? `http://localhost:${PORT}` : 'https://www.mesitas2.com';
+    console.log(`✅ Servidor corriendo en: ${url}`);
 });
