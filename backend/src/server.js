@@ -1,26 +1,32 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config(); // Cargar variables de entorno
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
-const ENV = process.env.ENV || 'local'; // Puede ser 'local' o 'production'
-
-// Ruta absoluta del frontend
+const ENV = process.env.ENV || 'local';
 const frontendPath = path.resolve(__dirname, '../../frontend');
 
-// 🔹 Si está en producción, servimos el frontend desde Express
-if (ENV === 'production') {
-    app.use(express.static(frontendPath));
-} else {
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(frontendPath, 'index.html'));
-    });
-}
+// Sirve los archivos estáticos primero NO TOCAR
+app.use('/assets', express.static(path.join(frontendPath, 'assets')));
+
+// Rutas específicas para páginas NO TOCAR
+app.get('/', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'pages', 'login.html'));
+});
+
+// ❗️3. Esta debe ir al final para no interceptar todo (y bloquear archivos estáticos) NO TOCAR
+app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 // Iniciar servidor
 app.listen(PORT, () => {
