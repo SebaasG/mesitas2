@@ -1,5 +1,6 @@
 const { query } = require('../config/db');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const login = async (req, res) => {
     try {
@@ -12,7 +13,6 @@ const login = async (req, res) => {
             });
         }
 
-        // Buscar usuario por correo
         const result = await query(
             'SELECT u.*, r.nombre as rol_nombre FROM usuarios u JOIN rol r ON u.rol_id = r.id WHERE u.correo = $1',
             [correo]
@@ -27,26 +27,25 @@ const login = async (req, res) => {
 
         const user = result.rows[0];
 
-        // Comparar contraseña directamente (texto plano)
-        if (password !== user.password) {
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
             return res.status(401).json({
                 success: false,
                 message: 'La contraseña es incorrecta'
             });
         }
 
-        // Generar token JWT
         const token = jwt.sign(
             {
                 id: user.id,
                 correo: user.correo,
                 rol: user.rol_nombre
             },
-            process.env.JWT_SECRET || 'tu_secreto_jwt',
+            process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
+        
 
-        // Registrar en historial
         await query(
             'INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion) VALUES ($1, $2, $3, $4)',
             [user.id, 'LOGIN', 'usuarios', 'Inicio de sesión exitoso']
@@ -73,6 +72,9 @@ const login = async (req, res) => {
         });
     }
 };
+
+
+
 
 module.exports = {
     login

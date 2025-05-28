@@ -1,19 +1,13 @@
+// src/routes/facturas.js
 const express = require('express');
 const router = express.Router();
-const { auth, isAdmin } = require('../middleware/auth');
-const {
-    subirFactura,
-    obtenerFacturasUsuario,
-    obtenerTodasFacturas,
-    descargarFactura
-} = require('../controllers/facturaController');
+const facturaCtrl = require('../controllers/facturaController');
+const { verifyToken, requireRole } = require('../middleware/auth');
 
-// Rutas protegidas para usuarios
-router.post('/subir', auth, subirFactura);
-router.get('/mis-facturas', auth, obtenerFacturasUsuario);
-router.get('/descargar/:id', auth, descargarFactura);
+// Ruta protegida para usuarios
+router.post('/subir', verifyToken, requireRole('usuario'), facturaCtrl.subirFactura);
 
-// Rutas protegidas para administradores
-router.get('/todas', auth, isAdmin, obtenerTodasFacturas);
+// Ruta protegida para admin
+router.get('/pendientes', verifyToken, requireRole('administrador'), facturaCtrl.verPendientes);
 
-module.exports = router; 
+module.exports = router;

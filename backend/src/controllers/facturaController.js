@@ -122,9 +122,28 @@ const descargarFactura = async (req, res) => {
     }
 };
 
+const verPendientes = async (req, res) => {
+    try {
+        const result = await query(
+            `SELECT f.*, tf.nombre AS tipo_factura
+             FROM facturas f
+             JOIN TipoFactura tf ON f.tipo_id = tf.id
+             WHERE f.usuario_id = $1 AND f.estado = 'pendiente'
+             ORDER BY f.fecha_vencimiento ASC`,
+            [req.user.id]
+        );
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error al obtener facturas pendientes:', error);
+        res.status(500).json({ error: 'Error al obtener facturas pendientes' });
+    }
+};
+
+
 module.exports = {
     subirFactura,
     obtenerFacturasUsuario,
     obtenerTodasFacturas,
-    descargarFactura
+    descargarFactura,
+    verPendientes
 }; 

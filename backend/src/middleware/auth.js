@@ -1,29 +1,30 @@
 const jwt = require('jsonwebtoken');
 
-const auth = (req, res, next) => {
-    try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        
-        if (!token) {
-            return res.status(401).json({ error: 'No se proporcionó token de autenticación' });
-        }
+const verifyToken = (req, res, next) => {
+    const bearer = req.headers['authorization'];
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'tu_secreto_jwt');
+    if (!bearer || !bearer.startsWith('Bearer ')) {
+        return res.status(403).json({ success: false, message: 'Token requerido' });
+    }
+
+    const token = bearer.split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = decoded;
         next();
-    } catch (error) {
-        res.status(401).json({ error: 'Token inválido' });
+    } catch (err) {
+        return res.status(401).json({ success: false, message: 'Token inválido' });
     }
 };
 
-const isAdmin = (req, res, next) => {
-    if (req.user.rol !== 'admin') {
-        return res.status(403).json({ error: 'Acceso denegado. Se requieren privilegios de administrador' });
+const requireRole = (roleName) => (req, res, next) => {
+    if (req.user.rol !== roleName) {
+        return res.status(403).json({ success: false, message: 'Acceso denegado' });
     }
     next();
 };
 
 module.exports = {
-    auth,
-    isAdmin
-}; 
+    verifyToken,
+    requireRole
+};
