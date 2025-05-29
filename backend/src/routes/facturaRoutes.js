@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { auth, isAdmin } = require('../middleware/auth');
+const { verificarToken } = require('../middleware/auth');
 const {
     subirFactura,
     obtenerFacturasUsuario,
@@ -8,12 +8,12 @@ const {
     descargarFactura
 } = require('../controllers/facturaController');
 
-// Rutas protegidas para usuarios
-router.post('/subir', auth, subirFactura);
-router.get('/mis-facturas', auth, obtenerFacturasUsuario);
-router.get('/descargar/:id', auth, descargarFactura);
+// Rutas protegidas con autenticación
+router.post('/subir', verificarToken, subirFactura);
+router.get('/mis-facturas', verificarToken, obtenerFacturasUsuario);
+router.get('/descargar/:id', verificarToken, descargarFactura);
 
-// Rutas protegidas para administradores
-router.get('/todas', auth, isAdmin, obtenerTodasFacturas);
+// Ruta solo para administradores
+router.get('/todas', verificarToken, obtenerTodasFacturas);
 
 module.exports = router; 

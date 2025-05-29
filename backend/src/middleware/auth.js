@@ -1,18 +1,24 @@
 const jwt = require('jsonwebtoken');
 
-const auth = (req, res, next) => {
-    try {
-        const token = req.header('Authorization')?.replace('Bearer ', '');
-        
-        if (!token) {
-            return res.status(401).json({ error: 'No se proporcionó token de autenticación' });
-        }
+const verificarToken = (req, res, next) => {
+    const token = req.headers.authorization?.split(' ')[1];
 
+    if (!token) {
+        return res.status(401).json({
+            success: false,
+            message: 'No se proporcionó token de autenticación'
+        });
+    }
+
+    try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'tu_secreto_jwt');
         req.user = decoded;
         next();
     } catch (error) {
-        res.status(401).json({ error: 'Token inválido' });
+        return res.status(401).json({
+            success: false,
+            message: 'Token inválido o expirado'
+        });
     }
 };
 
@@ -24,6 +30,6 @@ const isAdmin = (req, res, next) => {
 };
 
 module.exports = {
-    auth,
+    verificarToken,
     isAdmin
 }; 

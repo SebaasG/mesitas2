@@ -61,6 +61,14 @@ const subirFactura = async (req, res) => {
 // Obtener facturas del usuario
 const obtenerFacturasUsuario = async (req, res) => {
     try {
+        // Verificar que el usuario esté autenticado
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Usuario no autenticado' 
+            });
+        }
+
         const result = await query(
             `SELECT f.*, tf.nombre as tipo_factura 
             FROM facturas f 
@@ -69,9 +77,17 @@ const obtenerFacturasUsuario = async (req, res) => {
             ORDER BY f.fecha_emision DESC`,
             [req.user.id]
         );
-        res.json(result.rows);
+
+        res.json({
+            success: true,
+            data: result.rows
+        });
     } catch (error) {
-        res.status(500).json({ error: 'Error al obtener facturas' });
+        console.error('Error al obtener facturas:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Error al obtener facturas' 
+        });
     }
 };
 
