@@ -1,7 +1,6 @@
-const { query } = require('../config/db');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs').promises;
+const FacturaModel = require('../models/facturaModel');
 
 // Configuración de multer para almacenar PDFs
 const storage = multer.diskStorage({
@@ -25,7 +24,7 @@ const upload = multer({
     }
 }).single('archivo');
 
-// Subir factura con PDF
+// Subir factura
 const subirFactura = async (req, res) => {
     upload(req, res, async (err) => {
         if (err) {
@@ -36,21 +35,23 @@ const subirFactura = async (req, res) => {
             const { usuario_id, tipo_id, fecha_emision, fecha_vencimiento, total } = req.body;
             const archivo_pdf = req.file ? req.file.path : null;
 
-            const result = await query(
-                `INSERT INTO facturas 
-                (usuario_id, tipo_id, fecha_emision, fecha_vencimiento, total, archivo_pdf) 
-                VALUES ($1, $2, $3, $4, $5, $6) 
-                RETURNING *`,
-                [usuario_id, tipo_id, fecha_emision, fecha_vencimiento, total, archivo_pdf]
-            );
+            const nuevaFactura = await FacturaModel.crearFactura({
+                usuario_id,
+                tipo_id,
+                fecha_emision,
+                fecha_vencimiento,
+                total,
+                archivo_pdf
+            });
 
-            // Registrar en historial
-            await query(
-                'INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion) VALUES ($1, $2, $3, $4)',
-                [usuario_id, 'CREAR', 'facturas', 'Nueva factura creada']
-            );
+            await FacturaModel.registrarHistorial({
+                usuario_id,
+                accion: 'CREAR',
+                tabla_afectada: 'facturas',
+                descripcion: 'Nueva factura creada'
+            });
 
-            res.status(201).json(result.rows[0]);
+            res.status(201).json(nuevaFactura);
         } catch (error) {
             console.error('Error al subir factura:', error);
             res.status(500).json({ error: 'Error al procesar la factura' });
@@ -61,53 +62,33 @@ const subirFactura = async (req, res) => {
 // Obtener facturas del usuario
 const obtenerFacturasUsuario = async (req, res) => {
     try {
-        const result = await query(
-            `SELECT f.*, tf.nombre as tipo_factura 
-            FROM facturas f 
-            JOIN TipoFactura tf ON f.tipo_id = tf.id 
-            WHERE f.usuario_id = $1 
-            ORDER BY f.fecha_emision DESC`,
-            [req.user.id]
-        );
-        res.json(result.rows);
+        const facturas = await FacturaModel.obtenerFacturasPorUsuario(req.user.id);
+        res.json(facturas);
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener facturas' });
     }
 };
 
-// Obtener todas las facturas (solo admin)
+// Obtener todas las facturas
 const obtenerTodasFacturas = async (req, res) => {
     try {
-        const result = await query(
-            `SELECT f.*, tf.nombre as tipo_factura, u.nombre, u.apellido 
-            FROM facturas f 
-            JOIN TipoFactura tf ON f.tipo_id = tf.id 
-            JOIN usuarios u ON f.usuario_id = u.id 
-            ORDER BY f.fecha_emision DESC`
-        );
-        res.json(result.rows);
+        const facturas = await FacturaModel.obtenerTodasFacturas();
+        res.json(facturas);
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener facturas' });
     }
 };
 
-// Descargar PDF de factura
+// Descargar factura PDF
 const descargarFactura = async (req, res) => {
     try {
         const { id } = req.params;
-        
-        const result = await query(
-            'SELECT * FROM facturas WHERE id = $1',
-            [id]
-        );
+        const factura = await FacturaModel.obtenerFacturaPorId(id);
 
-        if (result.rows.length === 0) {
+        if (!factura) {
             return res.status(404).json({ error: 'Factura no encontrada' });
         }
 
-        const factura = result.rows[0];
-
-        // Verificar permisos
         if (req.user.rol !== 'admin' && factura.usuario_id !== req.user.id) {
             return res.status(403).json({ error: 'No tienes permiso para acceder a esta factura' });
         }
@@ -122,23 +103,16 @@ const descargarFactura = async (req, res) => {
     }
 };
 
+// Ver facturas pendientes del usuario
 const verPendientes = async (req, res) => {
     try {
-        const result = await query(
-            `SELECT f.*, tf.nombre AS tipo_factura
-             FROM facturas f
-             JOIN TipoFactura tf ON f.tipo_id = tf.id
-             WHERE f.usuario_id = $1 AND f.estado = 'pendiente'
-             ORDER BY f.fecha_vencimiento ASC`,
-            [req.user.id]
-        );
-        res.json(result.rows);
+        const pendientes = await FacturaModel.obtenerFacturasPendientes(req.user.id);
+        res.json(pendientes);
     } catch (error) {
         console.error('Error al obtener facturas pendientes:', error);
         res.status(500).json({ error: 'Error al obtener facturas pendientes' });
     }
 };
-
 
 module.exports = {
     subirFactura,
@@ -146,4 +120,4 @@ module.exports = {
     obtenerTodasFacturas,
     descargarFactura,
     verPendientes
-}; 
+};
