@@ -22,9 +22,9 @@ const verificarToken = (req, res, next) => {
     }
 };
 
-const requireRole = (roleName) => (req, res, next) => {
-    if (req.user.rol !== roleName) {
-        return res.status(403).json({ success: false, message: 'Acceso denegado' });
+const isAdmin = (req, res, next) => {
+    if (req.user.rol !== 'admin') {
+        return res.status(403).json({ error: 'Acceso denegado. Se requieren privilegios de administrador' });
     }
     next();
 };
