@@ -17,6 +17,12 @@ min-height: 100vh;
 -moz-osx-font-smoothing: grayscale;
 }
 
+.error-message {
+    color: red;
+    margin-top: 10px;
+    display: none;
+    text-align: center;
+}
 
 /* Header Section */
 
