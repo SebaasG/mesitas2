@@ -1,3 +1,4 @@
+// src/routes/facturas.js
 const express = require('express');
 const router = express.Router();
 const { verificarToken } = require('../middleware/auth');
@@ -16,4 +17,4 @@ router.get('/descargar/:id', verificarToken, descargarFactura);
 // Ruta solo para administradores
 router.get('/todas', verificarToken, obtenerTodasFacturas);
 
-module.exports = router; 
+module.exports = router;
