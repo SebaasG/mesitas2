@@ -18,13 +18,11 @@ min-height: 100vh;
 }
 
 .error-message {
-    color: red;
-    margin-top: 10px;
-    display: none;
-    text-align: center;
+color: red;
+margin-top: 10px;
+display: none;
+text-align: center;
 }
-
-
 
 .log-in {
 background-image: url('../img/Log-In\ IMG.jpg'); 
@@ -38,7 +36,6 @@ align-items: center;
 }
 
 .login-form-container {
-background-color: rgba(0, 0, 0, 0.6);
 padding: 2rem;
 border-radius: 12px;
 max-width: 400px;
@@ -48,6 +45,7 @@ width: 90%;
 .login-form-container h1 {
 font-size: 3rem;
 margin-bottom: 1.5rem;
+text-align: center;
 }
 
 .login-form {
@@ -86,9 +84,9 @@ background-color: #d5e654;
 border: none;
 border-radius: 5px;
 font-size: 1rem;
-font-family: 'Playfair Display', serif;
 cursor: pointer;
 transition: background-color 0.3s ease;
+margin-top: 5%;
 }
 
 .login-form button:hover {
@@ -97,4 +95,24 @@ background-color: #c5d644;
 
 label, h1{
 color: white;
+}
+
+.navbar {
+width: 100%;
+padding: 1rem 0;
+background-color: rgba(26, 26, 26, 0.398);
+text-align: center;
+position: absolute;
+top: 0;
+left: 0;
+z-index: 1000;
+padding-left: 5%;
+}
+
+.navbar h2 {
+margin: 0;
+font-size: 2rem;
+color: white;
+letter-spacing: 2px;
+text-align: left;
 }
