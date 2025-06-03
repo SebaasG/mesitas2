@@ -7,7 +7,7 @@ box-sizing: border-box;
 }
 
 body {
-font-family: 'Playfair Display', serif;
+font-family: 'Orpheus Pro', serif;
 font-size: 16px;
 line-height: 1.6;
 color: #333;
@@ -24,7 +24,7 @@ min-height: 100vh;
     text-align: center;
 }
 
-/* Header Section */
+
 
 .log-in {
 background-image: url('../img/Log-In\ IMG.jpg'); 
