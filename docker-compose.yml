@@ -1,3 +1,5 @@
+version: '3.9'
+
 services:
   db:
     image: postgres:15
@@ -22,6 +24,9 @@ services:
       - DB_PASSWORD=1234
       - DB_NAME=mesitas
       - JWT_SECRET=mesitas2025
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
     depends_on:
       - db
     restart: always
@@ -30,6 +35,8 @@ services:
     build: ./frontend
     ports:
       - "80:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
     restart: always
 
 volumes:
