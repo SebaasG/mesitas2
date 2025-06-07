@@ -4,9 +4,13 @@ const path = require('path');
 const fs = require('fs').promises;
 
 // Configuración de multer para almacenar PDFs
+const os = require('os');
+const downloadsDir = path.join(os.homedir(), 'Downloads');
+
+// Configuración de multer para almacenar PDFs en la carpeta Descargas
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/facturas');
+        cb(null, downloadsDir);  // <-- aquí va a Descargas
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -24,7 +28,6 @@ const upload = multer({
         }
     }
 }).single('archivo');
-
 // Subir factura con PDF
 const subirFactura = async (req, res) => {
     upload(req, res, async (err) => {
