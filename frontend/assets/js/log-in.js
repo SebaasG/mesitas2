@@ -31,18 +31,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
             console.log('Datos recibidos:', data); // Para depuración
+           
 
             if (response.ok && data.success) {
                 // Guardar el token en localStorage
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('userRole', data.user.rol);
-
+ 
                 const token = localStorage.getItem('token');
                 const userRole = localStorage.getItem('userRole');
-
+                console.log('Usuario role:', userRole); 
+                console.log('Token guardado:', token); 
                 // Verificar si es admin
-                if (userRole === 'Administrador') {
-                    window.location.href = '../pages/admin.html'; 
+                if (userRole === 'administrador' || userRole === 'Administrador') {
+                    window.location.href = '../../assets/pages/admin.html'; 
                 } else {
                     errorMessage.textContent = 'Acceso denegado. Se requieren privilegios de administrador.';
                     errorMessage.style.display = 'block';
