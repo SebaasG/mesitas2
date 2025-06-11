@@ -32,23 +32,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             console.log('Datos recibidos:', data); // Para depuración
            
+if (response.ok && data.success) {
+    // Guardar el token en localStorage
+    localStorage.setItem('token', data.token);
 
-            if (response.ok && data.success) {
-                // Guardar el token en localStorage
-                localStorage.setItem('token', data.token);
- 
-                const token = localStorage.getItem('token');
-                const userRole = localStorage.getItem('userRole');
-                console.log('Usuario role:', userRole); 
-                console.log('Token guardado:', token); 
-                // Verificar si es admin
-                if (userRole === 'administrador' || userRole === 'Administrador') {
-                    window.location.href = '../../assets/pages/admin.html'; 
-                } else {
-                    errorMessage.textContent = 'Acceso denegado. Se requieren privilegios de administrador.';
-                    errorMessage.style.display = 'block';
-                }
-            } else {
+    // ✅ También guardar el rol del usuario
+    localStorage.setItem('userRole', data.user.rol); 
+
+    const token = localStorage.getItem('token');
+    const userRole = localStorage.getItem('userRole');
+    console.log('Usuario role:', userRole); 
+    console.log('Token guardado:', token); 
+
+    // Verificar si es admin
+   if (userRole === 'admin' || userRole === 'Admin') {
+    window.location.href = '../../assets/pages/admin.html'; 
+} else if (userRole === 'usuario' || userRole === 'Usuario') {
+    window.location.href = '../../assets/pages/archivos.html'; 
+} else {
+    errorMessage.textContent = 'Acceso denegado. Rol no autorizado.';
+    errorMessage.style.display = 'block';
+}
+}
+else {
                 errorMessage.textContent = data.message || 'Error al iniciar sesión';
                 errorMessage.style.display = 'block';
             }

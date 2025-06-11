@@ -3,7 +3,8 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 
-require('dotenv').config({ path: './backend/.env' }); // Cargar variables de entorno
+
+require('dotenv').config();
 
 const { query, testConnection } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
