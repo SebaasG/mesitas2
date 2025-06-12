@@ -110,6 +110,41 @@ const obtenerTodasFacturas = async (req, res) => {
     }
 };
 
+
+// Obtener facturas por número de parcela
+const obtenerFacturasPorParcela = async (req, res) => {
+    let numeroParcela = req.params.numero;
+
+    if (!numeroParcela) {
+        return res.status(400).json({ error: 'Número de parcela no proporcionado' });
+    }
+
+    // Asegurar formato tipo "P001", "P002", etc.
+    if (!numeroParcela.startsWith('P')) {
+        numeroParcela = 'P' + numeroParcela.padStart(3, '0');
+    }
+
+    try {
+        const result = await query(
+            `SELECT f.*, tf.nombre AS tipo_factura, u.nombre, u.apellido
+             FROM facturas f
+             JOIN TipoFactura tf ON f.tipo_id = tf.id
+             JOIN usuarios u ON f.usuario_id = u.id
+             JOIN usuarioParcela up ON u.id = up.usuario_id
+             JOIN parcelas p ON up.parcela_id = p.id
+             WHERE p.numero_parcela = $1
+             ORDER BY f.fecha_emision DESC`,
+            [numeroParcela]
+        );
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error al obtener facturas por parcela:', error);
+        res.status(500).json({ error: 'Error al obtener facturas por parcela' });
+    }
+};
+
+
 // Descargar PDF de factura
 const descargarFactura = async (req, res) => {
     try {
@@ -145,5 +180,6 @@ module.exports = {
     subirFactura,
     obtenerFacturasUsuario,
     obtenerTodasFacturas,
-    descargarFactura
+    descargarFactura,
+    obtenerFacturasPorParcela
 }; 

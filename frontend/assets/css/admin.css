@@ -181,3 +181,60 @@ animation: fadeInUp 1.2s ease-out 0.3s both;
 .parcel-point {
 animation: fadeInUp 0.6s ease-out calc(0.8s + var(--delay, 0s)) both;
 }
+
+/* Fondo del modal */
+#facturasModal {
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6); /* overlay negro con transparencia */
+    display: none; /* Oculto por defecto */
+}
+
+/* Contenedor del contenido del modal */
+#facturasModal .modal-dialog {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 20px;
+    width: 80%;
+    max-width: 800px;
+    border-radius: 10px;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Encabezado del modal */
+#facturasModal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 10px;
+}
+
+/* Cuerpo del modal */
+#facturasModal .modal-body {
+    padding: 10px 0;
+}
+
+/* Botón de cerrar */
+#facturasModal .btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* Factura individual */
+.factura-item {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+}

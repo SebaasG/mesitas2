@@ -1,7 +1,6 @@
 // Token JWT (puedes obtenerlo desde localStorage o donde lo almacenes)
 const token = localStorage.getItem('token');
 
-// Función para obtener y mostrar las facturas del usuario en el modal
 async function verArchivos() {
     try {
         const response = await fetch('http://localhost:3000/api/facturas/mis-facturas', {

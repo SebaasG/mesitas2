@@ -6,7 +6,9 @@ const {
     subirFactura,
     obtenerFacturasUsuario,
     obtenerTodasFacturas,
-    descargarFactura
+    descargarFactura,
+    obtenerFacturasPorParcela
+
 } = require('../controllers/facturaController');
 
 // Rutas protegidas con autenticación
@@ -17,5 +19,6 @@ router.get('/descargar/:id', verificarToken, descargarFactura);
 
 // Ruta solo para administradores
 router.get('/todas' , verificarToken,isAdmin, obtenerTodasFacturas);
+router.get('/parcela/:numero', verificarToken, obtenerFacturasPorParcela);
 
 module.exports = router;

@@ -1,45 +1,78 @@
-// document.addEventListener('DOMContentLoaded', async function() {
-//     const token = localStorage.getItem('token');
-//     const userRole = localStorage.getItem('userRole');
-//     const errorMessage = document.getElementById('errorMessage');
+document.querySelectorAll('.parcel-point').forEach(point => {
+    point.addEventListener('click', async () => {
+        const numero = point.getAttribute('data-parcel');
+        const numeroParcela = 'P' + numero.padStart(3, '0'); // Ej: "P001"
+        const token = localStorage.getItem('token');
 
-//     // Verificar autenticación
-//     if (!token || userRole !== 'ADMIN') {
-//         window.location.href = '../index.html';
-//         return;
-//     }
+        if (!token) {
+            alert('No estás autenticado. Inicia sesión para continuar.');
+            return;
+        }
 
-//     try {
-//         const response = await fetch('/api/facturas/todas', {
-//             headers: {
-//                 'Authorization': `Bearer ${token}`
-//             }
-//         });
+        try {
+            const response = await fetch(`http://localhost:3000/api/facturas/parcela/${numeroParcela}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                }
+            });
 
-//         if (response.ok) {
-//             const facturas = await response.json();
-//             const facturasBody = document.getElementById('facturasBody');
-             
-//             facturas.forEach(factura => {
-//                 const row = document.createElement('tr');
-//                 row.innerHTML = `
-//                     <td>${factura.id}</td>
-//                     <td>${new Date(factura.fecha).toLocaleDateString()}</td>
-//                     <td>${factura.cliente}</td>
-//                     <td>$${factura.total.toFixed(2)}</td>
-//                     <td>${factura.estado}</td>
-//                 `;
-//                 facturasBody.appendChild(row);
-//             });
-//         } else if (response.status === 401) {
-//             // Token inválido o expirado
-//             localStorage.removeItem('token');
-//             localStorage.removeItem('userRole');
-//             window.location.href = '/frontend/index.html';
-//         } else {
-//             errorMessage.textContent = 'Error al cargar las facturas';
-//         }
-//     } catch (error) {
-//         errorMessage.textContent = 'Error al conectar con el servidor';
-//     }
-// }); 
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(`Error ${response.status}: ${text}`);
+            }
+
+            const facturas = await response.json();
+            mostrarFacturasEnModal(facturas);
+
+        } catch (error) {
+            console.error('Error al obtener las facturas:', error);
+            alert('No se pudieron cargar las facturas: ' + error.message);
+        }
+    });
+});
+
+function mostrarFacturasEnModal(facturas) {
+    const modal = document.getElementById('facturasModal');
+    const contenedor = document.getElementById('facturasContainer');
+    contenedor.innerHTML = '';
+
+    if (!facturas.length) {
+        contenedor.innerHTML = '<p>No hay facturas para esta parcela.</p>';
+    } else {
+        facturas.forEach(f => {
+            const facturaEl = document.createElement('div');
+            facturaEl.classList.add('factura-item');
+            facturaEl.innerHTML = `
+                <h6>Factura ID: ${f.id}</h6>
+                <p><strong>Tipo:</strong> ${f.tipo_factura}</p>
+                <p><strong>Usuario:</strong> ${f.nombre} ${f.apellido}</p>
+                <p><strong>Fecha emisión:</strong> ${f.fecha_emision}</p>
+                <p><strong>Total:</strong> $${f.total}</p>
+                ${f.archivo_pdf ? `<a href="file://${f.archivo_pdf}" target="_blank">Ver PDF</a>` : '<em>Sin archivo</em>'}
+                <hr>
+            `;
+            contenedor.appendChild(facturaEl);
+        });
+    }
+
+    // Mostrar modal sin Bootstrap
+    modal.classList.remove('fade');
+    modal.style.display = 'block';
+
+    // Cerrar con botón
+    const closeButton = modal.querySelector('.btn-close');
+    if (closeButton) {
+        closeButton.onclick = () => {
+            modal.style.display = 'none';
+        };
+    }
+
+    // Cerrar clic fuera del modal
+    window.onclick = (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
