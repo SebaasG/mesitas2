@@ -10,6 +10,7 @@ const { query, testConnection } = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const facturaRoutes = require('./routes/facturaRoutes');
 const userRoutes = require('./routes/userRoutes');
+const historialRouter = require('./routes/HistorialRouter');
 
 const app = express();
 app.use(cors());
@@ -32,6 +33,7 @@ testConnection();
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', userRoutes);
 app.use('/api/facturas', facturaRoutes);
+app.use('/api/historial', historialRouter);
 
 app.get('/api/test-db', async (req, res) => {
   try {
