@@ -45,7 +45,7 @@ if (response.ok && data.success) {
     console.log('Token guardado:', token); 
 
     // Verificar si es admin
-   if (userRole === 'admin' || userRole === 'Admin') {
+   if (userRole === 'Administrador' || userRole === 'Administrador') {
     window.location.href = '../../assets/pages/admin.html'; 
 } else if (userRole === 'usuario' || userRole === 'Usuario') {
     window.location.href = '../../assets/pages/archivos.html'; 
