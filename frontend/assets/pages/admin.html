@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,10 +8,11 @@
     <link rel="stylesheet" href="../css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="container">
         <div class="overlay"></div>
-        
+
         <div class="content">
             <div class="title">
                 <h1>Bienvenido señor administrador, seleccione la parcela que desea administrar</h1>
@@ -39,21 +41,31 @@
                 </div>
             </div>
 
-             <div class="modal fade" id="facturasModal" tabindex="-1" aria-labelledby="facturasModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content modal-custom">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="facturasModalLabel">Archivos Subidos</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <div class="historial-panel">
+                <h2>HISTORIAL</h2>
+                <div class="historial-list" id="historial-list">
+                    <p>No hay actividad reciente.</p>
                 </div>
-                <div class="modal-body">
-                    <div id="facturasContainer"></div>
+            </div>
+
+            <div class="modal fade" id="facturasModal" tabindex="-1" aria-labelledby="facturasModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content modal-custom">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="facturasModalLabel">Archivos Subidos</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="facturasContainer"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-        </div>
-    </div>
     <script src="../js/admin.js"></script>
 </body>
+
 </html>
