@@ -82,3 +82,7 @@ async function eliminarFactura(id) {
 }
 
 
+const facturasModal = document.getElementById('facturasModal');
+facturasModal.addEventListener('shown.bs.modal', () => {
+    verArchivos();
+});

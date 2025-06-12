@@ -20,11 +20,10 @@
            <div class="row justify-content-center mt-5">
     <div class="col-md-6 col-lg-4 mb-3">
        <div class="col-md-6 col-lg-4 mb-3">
-    <button class="btn btn-custom btn-lg w-100"
-        onclick="verArchivos()"
-        data-bs-toggle="modal" data-bs-target="#facturasModal">
-        Ver archivos subidos
-    </button>
+        
+   <button class="btn btn-custom btn-lg w-100" data-bs-toggle="modal" data-bs-target="#facturasModal">
+    Ver archivos subidos
+</button>
 </div>
     </div>
     <div class="col-md-6 col-lg-4 mb-3">
@@ -35,11 +34,7 @@
 </div>
 
 <!-- Contenedor para mostrar las facturas -->
-<div class="row justify-content-center mt-4">
-    <div class="col-12" id="facturasContainer">
-        <!-- Las facturas se insertarán aquí dinámicamente -->
-    </div>
-</div>
+
 
         </div>
     </div>
@@ -96,20 +91,21 @@
         </div>
     </div>
 
-    <div class="modal fade" id="facturasModal" tabindex="-1" aria-labelledby="facturasModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="facturasModalLabel">Facturas Subidas</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <div class="modal-body">
-        <div id="facturasContainer">
-          <!-- Aquí se insertan las tarjetas dinámicamente desde JS -->
+    <!-- Modal para mostrar las facturas -->
+<div class="modal fade" id="facturasModal" tabindex="-1" aria-labelledby="facturasModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content modal-custom">
+            <div class="modal-header">
+                <h5 class="modal-title" id="facturasModalLabel">Archivos Subidos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="facturasContainer">
+                    <!-- Aquí se insertarán las tarjetas de facturas -->
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 
     <!-- Bootstrap JS -->
