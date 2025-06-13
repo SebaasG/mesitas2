@@ -14,7 +14,7 @@ height: 100vh;
 position: relative;
 width: 100%;
 height: 100vh;
-background-image: url('../img/MidPage.jpg');
+background-image: url('../img/LastPage.jpg');
 background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
@@ -285,4 +285,23 @@ animation: fadeInUp 0.6s ease-out calc(0.8s + var(--delay, 0s)) both;
     margin-bottom: 10px;
     border-radius: 6px;
     background-color: #f9f9f9;
+}
+.logout-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: #c0392b;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1000;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.logout-btn:hover {
+    background-color: #e74c3c;
 }

@@ -4,6 +4,6 @@ const router = express.Router();
 const { ObtenerHistorial } = require('../controllers/historialcontroller');
 
 // Ruta para obtener el historial completo de facturas
-router.get('/historial', ObtenerHistorial);
+router.get('/', ObtenerHistorial);
 
 module.exports = router;

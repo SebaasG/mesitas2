@@ -50,40 +50,94 @@ function mostrarFacturasEnModal(facturas) {
                 <p><strong>Usuario:</strong> ${f.nombre} ${f.apellido}</p>
                 <p><strong>Fecha emisión:</strong> ${f.fecha_emision}</p>
                 <p><strong>Total:</strong> $${f.total}</p>
-                ${f.archivo_pdf ? `<a href="file://${f.archivo_pdf}" target="_blank">Ver PDF</a>` : '<em>Sin archivo</em>'}
+                ${
+                    f.archivo_pdf
+                        ? `<button class="btn-descargar" data-id="${f.id}">Ver PDF</button>`
+                        : '<em>Sin archivo</em>'
+                }
                 <hr>
             `;
             contenedor.appendChild(facturaEl);
         });
+
+        const botonesDescarga = contenedor.querySelectorAll('.btn-descargar');
+        botonesDescarga.forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                const token = localStorage.getItem('token');
+
+                if (!token) {
+                    alert('No tienes sesión activa. Por favor inicia sesión.');
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`http://localhost:3000/api/facturas/descargar/${id}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/pdf'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 403) {
+                            throw new Error('No tienes permiso para acceder a esta factura.');
+                        } else if (response.status === 401) {
+                            throw new Error('Sesión no válida o expirada.');
+                        } else {
+                            throw new Error('Error al descargar el PDF.');
+                        }
+                    }
+
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `factura_${id}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            });
+        });
     }
 
-    // Mostrar modal sin Bootstrap
+    // Mostrar el modal
     modal.classList.remove('fade');
     modal.style.display = 'block';
+    modal.setAttribute('aria-hidden', 'false');
 
-    // Cerrar con botón
+    // Asegurar que el foco no esté en un elemento dentro del modal oculto
+    if (document.activeElement) document.activeElement.blur();
+
+    // Cierre del modal
     const closeButton = modal.querySelector('.btn-close');
     if (closeButton) {
         closeButton.onclick = () => {
             modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
         };
     }
 
-    // Cerrar clic fuera del modal
+    // Cerrar al hacer clic fuera del modal
     window.onclick = (event) => {
         if (event.target === modal) {
             modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
         }
     };
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    obtenerHistorial();
-});
+
+
 
 async function obtenerHistorial() {
     try {
-        const response = await fetch('http://localhost:3000/api/historial/historial', {
+        const response = await fetch('http://localhost:3000/api/historial', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -97,18 +151,17 @@ async function obtenerHistorial() {
         const historialList = document.getElementById('historial-list');
         historialList.innerHTML = '';
 
-        if (!Array.isArray(data) || data.length === 0) {
+        if (!data.success || !Array.isArray(data.data) || data.data.length === 0) {
             historialList.innerHTML = '<p>No hay actividad reciente.</p>';
             return;
         }
 
-        // Renderizar historial
-        data.forEach(item => {
+        data.data.forEach(item => {
             const entry = document.createElement('div');
             entry.className = 'historial-item';
 
             entry.innerHTML = `
-                <p><strong>Usuario ID ${item.usuario_id}</strong> realizó <em>${item.accion}</em></p>
+                <p><strong>${item.nombre} ${item.apellido}</strong> realizó <em>${item.accion}</em> en <b>${item.tabla_afectada}</b></p>
                 <small>${new Date(item.fecha).toLocaleString()}</small>
                 <hr/>
             `;
@@ -122,3 +175,16 @@ async function obtenerHistorial() {
             '<p class="text-danger">Error al cargar el historial.</p>';
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    obtenerHistorial();
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.replace('/index.html');
+        });
+    }
+});

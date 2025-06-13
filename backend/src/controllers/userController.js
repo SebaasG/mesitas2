@@ -1,24 +1,44 @@
 const bcrypt = require('bcryptjs');
 const { query } = require('../config/db');
 
-/**
- * registrarUsuario:
- * Crea un nuevo usuario en la base de datos con la contraseña encriptada.
- * Valida los campos obligatorios y evita inyecciones SQL usando parámetros.
- */
 const registrarUsuario = async (req, res) => {
   try {
     const { nombre, apellido, correo, telefono, direccion, rol_id, password } = req.body;
 
-    // Verifica campos obligatorios
     if (!nombre || !correo || !password || !rol_id) {
       return res.status(400).json({ message: 'Faltan campos obligatorios' });
     }
 
-    // Hashear la contraseña con 10 rondas de sal
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(correo)) {
+      return res.status(400).json({ message: 'Correo inválido' });
+    }
+
+    if (password.length < 6 || password.length > 50) {
+      return res.status(400).json({ message: 'La contraseña debe tener entre 6 y 50 caracteres' });
+    }
+
+    const telefonoRegex = /^\d{7,15}$/;
+    if (telefono && !telefonoRegex.test(telefono)) {
+      return res.status(400).json({ message: 'Teléfono inválido' });
+    }
+
+    const nombreRegex = /^[a-zA-ZÀ-ÿ\s]{2,50}$/;
+    if (!nombreRegex.test(nombre)) {
+      return res.status(400).json({ message: 'Nombre inválido' });
+    }
+
+    if (apellido && !nombreRegex.test(apellido)) {
+      return res.status(400).json({ message: 'Apellido inválido' });
+    }
+
+    const direccionRegex = /^[\w\s\#\-\.\,]{0,100}$/;
+    if (direccion && !direccionRegex.test(direccion)) {
+      return res.status(400).json({ message: 'Dirección inválida' });
+    }
+
     const passwordHasheada = await bcrypt.hash(password, 10);
 
-    // Insertar usuario en la base de datos
     const result = await query(
       `INSERT INTO usuarios 
         (nombre, apellido, correo, telefono, direccion, rol_id, password) 
@@ -27,7 +47,6 @@ const registrarUsuario = async (req, res) => {
       [nombre, apellido, correo, telefono, direccion, rol_id, passwordHasheada]
     );
 
-    // Respuesta exitosa
     res.status(201).json({
       message: 'Usuario registrado',
       usuario: result.rows[0]

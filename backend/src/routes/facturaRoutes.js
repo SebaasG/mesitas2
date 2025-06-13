@@ -29,8 +29,10 @@ const upload = multer({ storage });
 router.post('/subir', authMiddleware, upload.single('archivo'), subirFactura); // <- importante
 router.get('/usuario', authMiddleware, obtenerFacturasUsuario);
 router.get('/admin', authMiddleware, obtenerTodasFacturas);
+router.delete('/eliminar/:id', authMiddleware, EliminarFactura);
 router.get('/descargar/:id', authMiddleware, descargarFactura);
 router.get('/parcela/:numero', authMiddleware, obtenerFacturasPorParcela);
+
 router.delete('/:id', authMiddleware, EliminarFactura);
 
 module.exports = router;

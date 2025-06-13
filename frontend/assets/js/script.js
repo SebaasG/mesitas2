@@ -3,7 +3,7 @@ const token = localStorage.getItem('token');
 
 async function verArchivos() {
     try {
-        const response = await fetch('http://localhost:3000/api/facturas/mis-facturas', {
+        const response = await fetch('http://localhost:3000/api/facturas/usuario', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -64,7 +64,7 @@ async function eliminarFactura(id) {
     }
 
     try {
-        const response = await fetch(`http://localhost:3000/api/facturas/EliminarFacturas/${id}`, {
+        const response = await fetch(`http://localhost:3000/api/facturas/eliminar/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`

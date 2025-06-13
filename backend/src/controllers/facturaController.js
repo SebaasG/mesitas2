@@ -1,107 +1,184 @@
-const { query } = require('../config/db');
+const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
+const fs = require('fs').promises;
+const { query } = require('../config/db');
 
-// Ruta donde se almacenan los PDFs
-const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'facturas');
 
-// ---------------------- SUBIR FACTURA ----------------------
+// Carpeta dentro del proyecto: /uploads/facturas
+const storageDir = path.join(__dirname, '..', 'uploads', 'facturas');
+
+// Configuración de multer para almacenar PDFs en la carpeta del proyecto
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, storageDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'factura-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'application/pdf') {
+            cb(null, true);
+        } else {
+            cb(new Error('Solo se permiten archivos PDF'));
+        }
+    }
+}).single('archivo');
+
+// Subir factura con PDF
+// const subirFactura = async (req, res) => {
+//     try {
+//         // Datos del body
+//         const { tipo_id, fecha_emision, fecha_vencimiento, total } = req.body;
+
+//         // Usuario autenticado desde el token
+//         const usuario_id = req.user.id;
+
+//         // Ruta del archivo PDF
+//         const archivo_pdf = req.file ? req.file.path : null;
+
+//         // Validar campos obligatorios
+//         if (!tipo_id || !fecha_emision || !fecha_vencimiento || !total || !archivo_pdf) {
+//             return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+//         }
+
+//         // Insertar en la base de datos
+//         const result = await query(
+//             `INSERT INTO facturas 
+//             (usuario_id, tipo_id, fecha_emision, fecha_vencimiento, total, archivo_pdf) 
+//             VALUES ($1, $2, $3, $4, $5, $6) 
+//             RETURNING *`,
+//             [usuario_id, tipo_id, fecha_emision, fecha_vencimiento, total, archivo_pdf]
+//         );
+
+//         // Registrar en historial
+//         await query(
+//             'INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion) VALUES ($1, $2, $3, $4)',
+//             [usuario_id, 'CREAR', 'facturas', 'Nueva factura creada']
+//         );
+
+//         res.status(201).json(result.rows[0]);
+//     } catch (error) {
+//         console.error('Error al subir factura:', error);
+//         res.status(500).json({ error: 'Error al procesar la factura' });
+//     }
+// };
 const subirFactura = async (req, res) => {
     try {
         const { tipo_id, fecha_emision, fecha_vencimiento, total } = req.body;
-        const archivo = req.file;
+        const usuario_id = req.user.id;
 
-        // Validar datos requeridos
-        if (!tipo_id || !fecha_emision || !fecha_vencimiento || !total) {
-            return res.status(400).json({ error: 'Faltan campos requeridos' });
+        // Guardar ruta relativa
+        const archivo_pdf = req.file ? path.join('uploads', 'facturas', req.file.filename) : null;
+
+        if (!tipo_id || !fecha_emision || !fecha_vencimiento || !total || !archivo_pdf) {
+            return res.status(400).json({ error: 'Todos los campos son obligatorios' });
         }
 
-        if (!archivo) {
-            return res.status(400).json({ error: 'Archivo PDF no proporcionado' });
-        }
-
-        const usuario_id = req.user?.id || req.usuario_id || 1; // Ajusta según cómo manejes auth
-        const archivo_pdf = archivo.filename;
-
-        const result = await query(`
-            INSERT INTO facturas (usuario_id, tipo_id, fecha_emision, fecha_vencimiento, total, archivo_pdf)
-            VALUES ($1, $2, $3, $4, $5, $6)
+        const result = await query(
+            `INSERT INTO facturas 
+            (usuario_id, tipo_id, fecha_emision, fecha_vencimiento, total, archivo_pdf) 
+            VALUES ($1, $2, $3, $4, $5, $6) 
             RETURNING *`,
             [usuario_id, tipo_id, fecha_emision, fecha_vencimiento, total, archivo_pdf]
         );
 
-        await query(`
-            INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion)
-            VALUES ($1, 'CREAR', 'facturas', 'Nueva factura creada')`,
-            [usuario_id]
+        await query(
+            'INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion) VALUES ($1, $2, $3, $4)',
+            [usuario_id, 'CREAR', 'facturas', 'Nueva factura creada']
         );
 
         res.status(201).json(result.rows[0]);
-
     } catch (error) {
         console.error('Error al subir factura:', error);
         res.status(500).json({ error: 'Error al procesar la factura' });
     }
 };
 
-// ---------------------- OBTENER FACTURAS USUARIO ----------------------
+
+// Obtener facturas del usuario
 const obtenerFacturasUsuario = async (req, res) => {
     try {
-        const usuario_id = req.user?.id;
-        if (!usuario_id) {
-            return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
+        // Verificar que el usuario esté autenticado
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ 
+                success: false,
+                message: 'Usuario no autenticado' 
+            });
         }
 
-        const result = await query(`
-            SELECT f.*, tf.nombre AS tipo_factura
-            FROM facturas f
-            JOIN TipoFactura tf ON f.tipo_id = tf.id
-            WHERE f.usuario_id = $1
+        const result = await query(
+            `SELECT f.*, tf.nombre as tipo_factura 
+            FROM facturas f 
+            JOIN TipoFactura tf ON f.tipo_id = tf.id 
+            WHERE f.usuario_id = $1 
             ORDER BY f.fecha_emision DESC`,
-            [usuario_id]
+            [req.user.id]
         );
 
-        res.json({ success: true, data: result.rows });
-
+        res.json({
+            success: true,
+            data: result.rows
+        });
     } catch (error) {
         console.error('Error al obtener facturas:', error);
-        res.status(500).json({ success: false, message: 'Error al obtener facturas' });
+        res.status(500).json({ 
+            success: false,
+            message: 'Error al obtener facturas' 
+        });
     }
 };
 
-// ---------------------- OBTENER TODAS (ADMIN) ----------------------
+// Obtener todas las facturas (solo admin)
 const obtenerTodasFacturas = async (req, res) => {
     try {
-        const result = await query(`
-            SELECT f.*, tf.nombre AS tipo_factura, u.nombre, u.apellido
-            FROM facturas f
-            JOIN TipoFactura tf ON f.tipo_id = tf.id
-            JOIN usuarios u ON f.usuario_id = u.id
+        const result = await query(
+            `SELECT f.*, tf.nombre as tipo_factura, u.nombre, u.apellido 
+            FROM facturas f 
+            JOIN TipoFactura tf ON f.tipo_id = tf.id 
+            JOIN usuarios u ON f.usuario_id = u.id 
             ORDER BY f.fecha_emision DESC`
         );
-
         res.json(result.rows);
     } catch (error) {
-        console.error('Error al obtener todas las facturas:', error);
         res.status(500).json({ error: 'Error al obtener facturas' });
     }
 };
 
-// ---------------------- ELIMINAR FACTURA ----------------------
 const EliminarFactura = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const result = await query('DELETE FROM facturas WHERE id = $1 RETURNING *', [id]);
-
-        if (result.rows.length === 0) {
+        const facturaResult = await query('SELECT * FROM facturas WHERE id = $1', [id]);
+        if (facturaResult.rows.length === 0) {
             return res.status(404).json({ error: 'Factura no encontrada' });
         }
 
-        await query(`
-            INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion)
-            VALUES ($1, 'ELIMINAR', 'facturas', $2)`,
-            [req.user.id, `Factura con ID ${id} eliminada`]
+        const factura = facturaResult.rows[0];
+
+        if (factura.archivo_pdf) {
+            const filePath = path.join(__dirname, '..', factura.archivo_pdf.replace(/\\/g, '/'));
+            try {
+                if (fs.existsSync(filePath)) {
+                    await fs.promises.unlink(filePath);
+                    console.log(`Archivo eliminado: ${filePath}`);
+                } else {
+                    console.warn(`Archivo no encontrado para eliminar: ${filePath}`);
+                }
+            } catch (err) {
+                console.warn(`Error eliminando archivo: ${filePath}`, err.message);
+            }
+        }
+
+        const result = await query('DELETE FROM facturas WHERE id = $1 RETURNING *', [id]);
+
+        await query(
+            'INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion) VALUES ($1, $2, $3, $4)',
+            [req.user.id, 'ELIMINAR', 'facturas', `Factura con ID ${id} eliminada`]
         );
 
         res.json({ message: 'Factura eliminada correctamente', factura: result.rows[0] });
@@ -112,53 +189,69 @@ const EliminarFactura = async (req, res) => {
     }
 };
 
-// ---------------------- POR PARCELA ----------------------
+
+
+// Obtener facturas por número de parcela
 const obtenerFacturasPorParcela = async (req, res) => {
     let numeroParcela = req.params.numero;
 
-    if (!numeroParcela) return res.status(400).json({ error: 'Número de parcela no proporcionado' });
-    if (!numeroParcela.startsWith('P')) numeroParcela = 'P' + numeroParcela.padStart(3, '0');
+    if (!numeroParcela) {
+        return res.status(400).json({ error: 'Número de parcela no proporcionado' });
+    }
+
+    // Asegurar formato tipo "P001", "P002", etc.
+    if (!numeroParcela.startsWith('P')) {
+        numeroParcela = 'P' + numeroParcela.padStart(3, '0');
+    }
 
     try {
-        const result = await query(`
-            SELECT f.*, tf.nombre AS tipo_factura, u.nombre, u.apellido
-            FROM facturas f
-            JOIN TipoFactura tf ON f.tipo_id = tf.id
-            JOIN usuarios u ON f.usuario_id = u.id
-            JOIN usuarioParcela up ON u.id = up.usuario_id
-            JOIN parcelas p ON up.parcela_id = p.id
-            WHERE p.numero_parcela = $1
-            ORDER BY f.fecha_emision DESC`,
+        const result = await query(
+            `SELECT f.*, tf.nombre AS tipo_factura, u.nombre, u.apellido
+             FROM facturas f
+             JOIN TipoFactura tf ON f.tipo_id = tf.id
+             JOIN usuarios u ON f.usuario_id = u.id
+             JOIN usuarioParcela up ON u.id = up.usuario_id
+             JOIN parcelas p ON up.parcela_id = p.id
+             WHERE p.numero_parcela = $1
+             ORDER BY f.fecha_emision DESC`,
             [numeroParcela]
         );
 
         res.json(result.rows);
-
     } catch (error) {
         console.error('Error al obtener facturas por parcela:', error);
         res.status(500).json({ error: 'Error al obtener facturas por parcela' });
     }
 };
 
-// ---------------------- DESCARGAR PDF ----------------------
+
+// Descargar PDF de factura
 const descargarFactura = async (req, res) => {
     try {
         const { id } = req.params;
 
         const result = await query('SELECT * FROM facturas WHERE id = $1', [id]);
-        if (result.rows.length === 0) return res.status(404).json({ error: 'Factura no encontrada' });
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Factura no encontrada' });
+        }
 
         const factura = result.rows[0];
 
-        if (req.user.rol !== 'admin' && factura.usuario_id !== req.user.id) {
-            return res.status(403).json({ error: 'No tienes permiso para esta factura' });
+        if (req.user.rol !== 'administrador' && factura.usuario_id !== req.user.id) {
+            return res.status(403).json({ error: 'No tienes permiso para acceder a esta factura' });
         }
 
-        if (!factura.archivo_pdf) return res.status(404).json({ error: 'No hay PDF asociado' });
+        if (!factura.archivo_pdf) {
+            return res.status(404).json({ error: 'No hay archivo PDF asociado' });
+        }
 
-        const ruta = path.join(uploadDir, factura.archivo_pdf);
-        res.download(ruta);
+        // Asegúrate de subir el archivo a `backend/uploads/...`
+        const relativePath = factura.archivo_pdf.replace(/\\/g, '/');
+        const filePath = path.join(__dirname, '..', '..', relativePath);
 
+        await fs.access(filePath); // lanza error si no existe
+        res.download(filePath);
     } catch (error) {
         console.error('Error al descargar factura:', error);
         res.status(500).json({ error: 'Error al descargar la factura' });
@@ -172,4 +265,4 @@ module.exports = {
     descargarFactura,
     obtenerFacturasPorParcela,
     EliminarFactura
-};
+}; 
