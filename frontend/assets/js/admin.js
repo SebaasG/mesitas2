@@ -1,3 +1,4 @@
+// ✅ Asignar eventos a cada punto de parcela
 document.querySelectorAll('.parcel-point').forEach(point => {
     point.addEventListener('click', async () => {
         const numero = point.getAttribute('data-parcel');
@@ -10,6 +11,7 @@ document.querySelectorAll('.parcel-point').forEach(point => {
         }
 
         try {
+            // Solicitud para obtener facturas de la parcela
             const response = await fetch(`http://localhost:3000/api/facturas/parcela/${numeroParcela}`, {
                 method: 'GET',
                 headers: {
@@ -33,17 +35,22 @@ document.querySelectorAll('.parcel-point').forEach(point => {
     });
 });
 
+
+// ✅ Muestra las facturas en un modal personalizado
 function mostrarFacturasEnModal(facturas) {
     const modal = document.getElementById('facturasModal');
     const contenedor = document.getElementById('facturasContainer');
     contenedor.innerHTML = '';
 
+    // Si no hay facturas
     if (!facturas.length) {
         contenedor.innerHTML = '<p>No hay facturas para esta parcela.</p>';
     } else {
+        // Renderizar cada factura
         facturas.forEach(f => {
             const facturaEl = document.createElement('div');
             facturaEl.classList.add('factura-item');
+
             facturaEl.innerHTML = `
                 <h6>Factura ID: ${f.id}</h6>
                 <p><strong>Tipo:</strong> ${f.tipo_factura}</p>
@@ -60,6 +67,7 @@ function mostrarFacturasEnModal(facturas) {
             contenedor.appendChild(facturaEl);
         });
 
+        // Asociar eventos a botones de descarga
         const botonesDescarga = contenedor.querySelectorAll('.btn-descargar');
         botonesDescarga.forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -90,6 +98,7 @@ function mostrarFacturasEnModal(facturas) {
                         }
                     }
 
+                    // Descargar PDF desde el blob
                     const blob = await response.blob();
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -106,15 +115,15 @@ function mostrarFacturasEnModal(facturas) {
         });
     }
 
-    // Mostrar el modal
+    // ✅ Mostrar el modal manualmente (sin fade de Bootstrap)
     modal.classList.remove('fade');
     modal.style.display = 'block';
     modal.setAttribute('aria-hidden', 'false');
 
-    // Asegurar que el foco no esté en un elemento dentro del modal oculto
+    // ✅ Evitar que el foco quede en un elemento oculto
     if (document.activeElement) document.activeElement.blur();
 
-    // Cierre del modal
+    // ✅ Cerrar modal con botón "X"
     const closeButton = modal.querySelector('.btn-close');
     if (closeButton) {
         closeButton.onclick = () => {
@@ -123,7 +132,7 @@ function mostrarFacturasEnModal(facturas) {
         };
     }
 
-    // Cerrar al hacer clic fuera del modal
+    // ✅ Cerrar modal al hacer clic fuera de él
     window.onclick = (event) => {
         if (event.target === modal) {
             modal.style.display = 'none';
@@ -132,9 +141,7 @@ function mostrarFacturasEnModal(facturas) {
     };
 }
 
-
-
-
+// ✅ Obtener historial de acciones (visible para admins)
 async function obtenerHistorial() {
     try {
         const response = await fetch('http://localhost:3000/api/historial', {
@@ -159,13 +166,11 @@ async function obtenerHistorial() {
         data.data.forEach(item => {
             const entry = document.createElement('div');
             entry.className = 'historial-item';
-
             entry.innerHTML = `
                 <p><strong>${item.nombre} ${item.apellido}</strong> realizó <em>${item.accion}</em> en <b>${item.tabla_afectada}</b></p>
                 <small>${new Date(item.fecha).toLocaleString()}</small>
                 <hr/>
             `;
-
             historialList.appendChild(entry);
         });
 
@@ -176,9 +181,11 @@ async function obtenerHistorial() {
     }
 }
 
+// ✅ Configuraciones generales al cargar la página
 document.addEventListener('DOMContentLoaded', () => {
     obtenerHistorial();
 
+    // Botón de cerrar sesión
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function () {

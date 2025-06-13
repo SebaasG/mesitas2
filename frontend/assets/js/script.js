@@ -1,6 +1,130 @@
-// Token JWT (puedes obtenerlo desde localStorage o donde lo almacenes)
+// =======================
+// 🔐 Token desde localStorage
+// =======================
 const token = localStorage.getItem('token');
 
+// =======================
+// 🔁 Inicialización DOM
+// =======================
+document.addEventListener('DOMContentLoaded', () => {
+    const uploadForm = document.getElementById('uploadForm');
+    const archivoInput = document.getElementById('archivo');
+
+    // Evento principal de envío del formulario
+    uploadForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // Validación de totales
+        const totalInput = document.getElementById('total_oculto').value;
+        const confirmarInput = document.getElementById('confirmar_total_oculto').value;
+
+        if (!totalInput || !confirmarInput || totalInput !== confirmarInput) {
+            alert('❌ Los valores del Total no coinciden. Por favor verifica ambos campos.');
+            return;
+        }
+
+        // Captura de datos del formulario
+        const tipo_id = document.getElementById('tipo_id').value;
+        const fecha_emision = document.getElementById('fecha_emision').value;
+        const fecha_vencimiento = document.getElementById('fecha_vencimiento').value;
+        const total = totalInput;
+        const archivo = archivoInput.files[0];
+
+        const formData = new FormData();
+        formData.append('tipo_id', tipo_id);
+        formData.append('fecha_emision', fecha_emision);
+        formData.append('fecha_vencimiento', fecha_vencimiento);
+        formData.append('total', total);
+        formData.append('archivo', archivo);
+
+        console.log('Subiendo factura con los siguientes datos:');
+        console.log('Tipo ID:', tipo_id);
+        console.log('Fecha Emisión:', fecha_emision);
+        console.log('Fecha Vencimiento:', fecha_vencimiento);
+        console.log('Total:', total);
+        console.log('Archivo:', archivo?.name || 'No se seleccionó archivo');
+
+        try {
+            const response = await fetch('http://localhost:3000/api/facturas/subir', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert('✅ Factura subida correctamente.');
+                uploadForm.reset();
+                document.getElementById('uploadText').textContent = 'Cargar un archivo';
+
+                const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
+                if (modal) modal.hide();
+
+                verArchivos();
+            } else {
+                alert(data.error || '❌ Error al subir la factura.');
+            }
+        } catch (error) {
+            console.error('Error al subir factura:', error);
+            alert('❌ Ocurrió un error al enviar la factura.');
+        }
+    });
+
+    // Carga inicial de facturas al mostrar modal
+    document.getElementById('facturasModal').addEventListener('shown.bs.modal', verArchivos);
+});
+
+// =======================
+// 💰 Formateo de valores CLP
+// =======================
+
+// 👉 Formatea un input al escribir (y actualiza campo oculto)
+function actualizarTotal(inputId, hiddenId) {
+    const input = document.getElementById(inputId);
+    const hidden = document.getElementById(hiddenId);
+    const valorNumerico = input.value.replace(/\D/g, '');
+
+    hidden.value = valorNumerico;
+
+    input.value = new Intl.NumberFormat('es-CL', {
+        style: 'currency',
+        currency: 'CLP',
+        minimumFractionDigits: 0
+    }).format(valorNumerico || 0);
+}
+window.actualizarTotal = actualizarTotal;
+
+// 👉 Solo formatea un input CLP visualmente (sin oculto)
+function formatearPesos(input) {
+    const valorNumerico = input.value.replace(/\D/g, '');
+    const formateado = new Intl.NumberFormat('es-CL', {
+        style: 'currency',
+        currency: 'CLP',
+        minimumFractionDigits: 0
+    }).format(valorNumerico || 0);
+    input.value = formateado;
+}
+window.formatearPesos = formatearPesos;
+
+// =======================
+// 📎 Nombre del archivo cargado
+// =======================
+function updateFileName() {
+    const archivo = document.getElementById('archivo');
+    const uploadText = document.getElementById('uploadText');
+
+    uploadText.textContent = archivo.files.length > 0
+        ? archivo.files[0].name
+        : 'Cargar un archivo';
+}
+window.updateFileName = updateFileName;
+
+// =======================
+// 📤 Visualización de facturas
+// =======================
 async function verArchivos() {
     try {
         const response = await fetch('http://localhost:3000/api/facturas/usuario', {
@@ -13,14 +137,14 @@ async function verArchivos() {
 
         const data = await response.json();
         const container = document.getElementById('facturasContainer');
-        container.innerHTML = ''; // Limpiar contenido anterior
+        container.innerHTML = '';
 
         if (!data.success) {
             container.innerHTML = `<div class="alert alert-danger">No se pudieron cargar las facturas.</div>`;
             return;
         }
 
-        if (data.data.length === 0) {
+        if (!data.data || data.data.length === 0) {
             container.innerHTML = `<div class="alert alert-info">No hay facturas disponibles.</div>`;
             return;
         }
@@ -30,16 +154,21 @@ async function verArchivos() {
             card.className = 'card mb-3 shadow-sm';
             card.id = `factura-${factura.id}`;
 
+            const tieneArchivo = factura.archivo_pdf || factura.archivo;
+            const tipoTexto = factura.tipo_factura || (factura.tipo_id === 1 ? 'Administración' : 'Otro');
+            const descargaDisponible = tieneArchivo
+                ? `<button class="btn btn-success btn-sm mt-2" onclick="descargarFactura(${factura.id})">Descargar PDF</button>`
+                : `<p class="text-muted">No hay archivo PDF</p>`;
+
             card.innerHTML = `
                 <div class="card-body">
                     <h5 class="card-title">Factura N° ${factura.id}</h5>
-                    <p class="card-text"><strong>Tipo:</strong> ${factura.tipo_factura}</p>
+                    <p class="card-text"><strong>Tipo:</strong> ${tipoTexto}</p>
                     <p class="card-text"><strong>Fecha de emisión:</strong> ${new Date(factura.fecha_emision).toLocaleDateString()}</p>
-                    <p class="card-text"><strong>Total:</strong> $${parseFloat(factura.total).toFixed(2)}</p>
+                    <p class="card-text"><strong>Total:</strong> $${parseFloat(factura.total).toLocaleString('es-CL')}</p>
                     ${factura.descripcion ? `<p class="card-text"><strong>Descripción:</strong> ${factura.descripcion}</p>` : ''}
-                    <button class="btn btn-danger btn-sm mt-2" onclick="eliminarFactura(${factura.id})">
-                        Eliminar
-                    </button>
+                    ${descargaDisponible}
+                    <button class="btn btn-danger btn-sm mt-2" onclick="eliminarFactura(${factura.id})">Eliminar</button>
                 </div>
             `;
 
@@ -53,15 +182,47 @@ async function verArchivos() {
     }
 }
 
-// Función para eliminar una factura
+// =======================
+// ⬇️ Descarga de factura PDF
+// =======================
+async function descargarFactura(id) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/facturas/descargar/${id}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            alert(error.error || 'Error al descargar la factura.');
+            return;
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `factura_${id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+        console.error('Error al descargar factura:', error);
+        alert('❌ Ocurrió un error al intentar descargar la factura.');
+    }
+}
+window.descargarFactura = descargarFactura;
+
+// =======================
+// 🗑️ Eliminación de factura
+// =======================
 async function eliminarFactura(id) {
     if (!confirm('¿Estás seguro de que deseas eliminar esta factura?')) return;
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-        alert('No estás autenticado.');
-        return;
-    }
 
     try {
         const response = await fetch(`http://localhost:3000/api/facturas/eliminar/${id}`, {
@@ -74,22 +235,15 @@ async function eliminarFactura(id) {
         const data = await response.json();
 
         if (response.ok) {
-            // Eliminar visualmente la tarjeta del DOM
-            const card = document.getElementById(`factura-${id}`);
-            if (card) card.remove();
-
-            alert('Factura eliminada correctamente.');
+            document.getElementById(`factura-${id}`)?.remove();
+            alert('✅ Factura eliminada correctamente.');
         } else {
-            alert(data.error || 'No se pudo eliminar la factura.');
+            alert(data.error || '❌ No se pudo eliminar la factura.');
         }
+
     } catch (error) {
         console.error('Error al eliminar la factura:', error);
-        alert('Ocurrió un error al intentar eliminar la factura.');
+        alert('❌ Ocurrió un error al intentar eliminar la factura.');
     }
 }
-
-
-const facturasModal = document.getElementById('facturasModal');
-facturasModal.addEventListener('shown.bs.modal', () => {
-    verArchivos();
-});
+window.eliminarFactura = eliminarFactura;
