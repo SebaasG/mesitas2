@@ -18,7 +18,12 @@ const ObtenerHistorial = async (req, res) => {
 
             // Consulta SQL
             const result = await query(
-                `select h.usuario_id, h.accion,h.fecha  from historial h;`
+                `SELECT h.usuario_id, h.accion, h.fecha  
+                    FROM historial h  
+                    WHERE DATE(h.fecha) = CURRENT_DATE
+                    ORDER BY h.fecha DESC;
+
+                                            `
             );
 
             res.status(200).json(result.rows);

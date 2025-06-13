@@ -7,7 +7,8 @@ const {
     obtenerFacturasUsuario,
     obtenerTodasFacturas,
     descargarFactura,
-    obtenerFacturasPorParcela
+    obtenerFacturasPorParcela,
+    EliminarFactura
 
 } = require('../controllers/facturaController');
 
@@ -20,5 +21,6 @@ router.get('/descargar/:id', verificarToken, descargarFactura);
 // Ruta solo para administradores
 router.get('/todas' , verificarToken,isAdmin, obtenerTodasFacturas);
 router.get('/parcela/:numero', verificarToken, obtenerFacturasPorParcela);
+router.delete('/EliminarFacturas/:id', verificarToken, EliminarFactura);
 
 module.exports = router;

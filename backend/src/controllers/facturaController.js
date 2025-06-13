@@ -110,6 +110,33 @@ const obtenerTodasFacturas = async (req, res) => {
     }
 };
 
+const EliminarFactura = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+
+        const result = await query(
+            'DELETE FROM facturas WHERE id = $1 RETURNING *',
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Factura no encontrada' });
+        }
+
+        // Registrar en historial
+        await query(
+            'INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion) VALUES ($1, $2, $3, $4)',
+            [req.user.id, 'ELIMINAR', 'facturas', `Factura con ID ${id} eliminada`]
+        );
+
+        res.json({ message: 'Factura eliminada correctamente', factura: result.rows[0] });
+    } catch (error) {
+        console.error('Error al eliminar factura:', error);
+        res.status(500).json({ error: 'Error al eliminar factura' });
+    }
+}
+
 
 // Obtener facturas por número de parcela
 const obtenerFacturasPorParcela = async (req, res) => {
@@ -181,5 +208,6 @@ module.exports = {
     obtenerFacturasUsuario,
     obtenerTodasFacturas,
     descargarFactura,
-    obtenerFacturasPorParcela
+    obtenerFacturasPorParcela,
+    EliminarFactura
 }; 

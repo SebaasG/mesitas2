@@ -57,8 +57,14 @@ async function verArchivos() {
 async function eliminarFactura(id) {
     if (!confirm('¿Estás seguro de que deseas eliminar esta factura?')) return;
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('No estás autenticado.');
+        return;
+    }
+
     try {
-        const response = await fetch(`http://localhost:3000/api/facturas/${id}`, {
+        const response = await fetch(`http://localhost:3000/api/facturas/EliminarFacturas/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -67,12 +73,14 @@ async function eliminarFactura(id) {
 
         const data = await response.json();
 
-        if (data.success) {
+        if (response.ok) {
             // Eliminar visualmente la tarjeta del DOM
             const card = document.getElementById(`factura-${id}`);
             if (card) card.remove();
+
+            alert('Factura eliminada correctamente.');
         } else {
-            alert('No se pudo eliminar la factura.');
+            alert(data.error || 'No se pudo eliminar la factura.');
         }
     } catch (error) {
         console.error('Error al eliminar la factura:', error);
