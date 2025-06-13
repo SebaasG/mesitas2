@@ -1,7 +1,7 @@
-// src/routes/facturas.js
 const express = require('express');
 const router = express.Router();
-const { verificarToken, isAdmin } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
 const {
     subirFactura,
     obtenerFacturasUsuario,
@@ -9,18 +9,28 @@ const {
     descargarFactura,
     obtenerFacturasPorParcela,
     EliminarFactura
-
 } = require('../controllers/facturaController');
 
-// Rutas protegidas con autenticación
-router.post('/subir', verificarToken, subirFactura);
-router.get('/mis-facturas', verificarToken, obtenerFacturasUsuario);
+const authMiddleware = require('../middleware/auth');
 
-router.get('/descargar/:id', verificarToken, descargarFactura);
+// Configuración de Multer para archivos
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/facturas'); // carpeta donde se almacenan temporalmente los archivos
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)); // nombre único
+    }
+});
 
-// Ruta solo para administradores
-router.get('/todas' , verificarToken,isAdmin, obtenerTodasFacturas);
-router.get('/parcela/:numero', verificarToken, obtenerFacturasPorParcela);
-router.delete('/EliminarFacturas/:id', verificarToken, EliminarFactura);
+const upload = multer({ storage });
+
+// Rutas protegidas
+router.post('/subir', authMiddleware, upload.single('archivo'), subirFactura); // <- importante
+router.get('/usuario', authMiddleware, obtenerFacturasUsuario);
+router.get('/admin', authMiddleware, obtenerTodasFacturas);
+router.get('/descargar/:id', authMiddleware, descargarFactura);
+router.get('/parcela/:numero', authMiddleware, obtenerFacturasPorParcela);
+router.delete('/:id', authMiddleware, EliminarFactura);
 
 module.exports = router;

@@ -1,35 +1,38 @@
 const jwt = require('jsonwebtoken');
 
-const verificarToken = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
+// Clave secreta para verificar el token JWT.
+// Usa una variable de entorno segura en producción.
+const SECRET_KEY = process.env.JWT_SECRET || 'mesitas2025';
 
-    if (!token) {
-        return res.status(401).json({
-            success: false,
-            message: 'No se proporcionó token de autenticación'
-        });
+/**
+ * Middleware para proteger rutas usando JWT.
+ * Verifica el token enviado en el header "Authorization".
+ */
+const authMiddleware = (req, res, next) => {
+    // Leer el header Authorization
+    const authHeader = req.headers.authorization;
+
+    // Verificar que el header tenga formato: "Bearer <token>"
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Token no proporcionado o mal formado' });
     }
+
+    // Extraer el token
+    const token = authHeader.split(' ')[1];
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'tu_secreto_jwt');
+        // Verificar y decodificar el token
+        const decoded = jwt.verify(token, SECRET_KEY);
+
+        // Guardar los datos del usuario en el request
         req.user = decoded;
+
+        // Pasar al siguiente middleware o controlador
         next();
     } catch (error) {
-        return res.status(401).json({
-            success: false,
-            message: 'Token inválido o expirado'
-        });
+        console.error('Token inválido:', error.message);
+        return res.status(401).json({ message: 'Token inválido o expirado' });
     }
 };
 
-const isAdmin = (req, res, next) => {
-    if (req.user.rol !== 'admin') {
-        return res.status(403).json({ error: 'Acceso denegado. Se requieren privilegios de administrador' });
-    }
-    next();
-};
-
-module.exports = {
-    verificarToken,
-    isAdmin
-}; 
+module.exports = authMiddleware;

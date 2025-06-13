@@ -2,6 +2,7 @@ const { query } = require('../config/db');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
+// Controlador de inicio de sesión
 const login = async (req, res) => {
     try {
         const { correo, password } = req.body;
@@ -14,7 +15,10 @@ const login = async (req, res) => {
         }
 
         const result = await query(
-            'SELECT u.*, r.nombre as rol_nombre FROM usuarios u JOIN rol r ON u.rol_id = r.id WHERE u.correo = $1',
+            `SELECT u.*, r.nombre as rol_nombre 
+             FROM usuarios u 
+             JOIN rol r ON u.rol_id = r.id 
+             WHERE u.correo = $1`,
             [correo]
         );
 
@@ -44,10 +48,11 @@ const login = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
-        
 
         await query(
-            'INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion) VALUES ($1, $2, $3, $4)',
+            `INSERT INTO historial 
+             (usuario_id, accion, tabla_afectada, descripcion) 
+             VALUES ($1, $2, $3, $4)`,
             [user.id, 'LOGIN', 'usuarios', 'Inicio de sesión exitoso']
         );
 
@@ -72,9 +77,6 @@ const login = async (req, res) => {
         });
     }
 };
-
-
-
 
 module.exports = {
     login
