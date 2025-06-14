@@ -144,7 +144,7 @@ function mostrarFacturasEnModal(facturas) {
 // ✅ Obtener historial de acciones (visible para admins)
 async function obtenerHistorial() {
     try {
-        const response = await fetch('http://localhost:3000/api/historial', {
+        const response = await fetch('http://localhost:3000/api/historial/historial', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

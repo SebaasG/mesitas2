@@ -22,7 +22,8 @@ const ObtenerHistorial = async (req, res) => {
 
       const userId = user.id;
       const userRole = user.rol; // <- aquí verificamos el rol
-      const fecha = req.query.fecha || new Date().toISOString().slice(0, 10);
+      const fecha = req.query.fecha || new Date().toLocaleDateString('sv-SE'); // 'YYYY-MM-DD' formato
+
 
       let result;
 
@@ -68,6 +69,4 @@ module.exports = {
   ObtenerHistorial
 };
 
-module.exports = {
-  ObtenerHistorial
-};
+
