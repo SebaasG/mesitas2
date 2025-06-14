@@ -9,6 +9,14 @@ const token = localStorage.getItem('token');
 document.addEventListener('DOMContentLoaded', () => {
     const uploadForm = document.getElementById('uploadForm');
     const archivoInput = document.getElementById('archivo');
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.replace('/index.html');
+        });
+    }
 
     // Evento principal de envío del formulario
     uploadForm.addEventListener('submit', async function (e) {
