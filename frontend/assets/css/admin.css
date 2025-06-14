@@ -145,7 +145,83 @@ line-height: 1.4;
 margin-right: 220px;
 }
 
-/* Responsive Design */
+.btn-descargar {
+    background-color: #e9ed7b;
+    border: none;
+    color: #333;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.modal-custom {
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+    border: none;
+    background-color: #e9ed7b;
+    background-color: rgba(233, 237, 123, 0.6);
+}
+
+.modal-header {
+    border-bottom: 1px solid #d6da6a;
+    padding: 1.5rem 2rem;
+    background-color: transparent;
+}
+
+.modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Cuerpo del modal */
+.modal-body {
+    padding: 2rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#facturasContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.factura-item {
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid #d6da6a;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-width: 700px;
+}
+
+.factura-info {
+    flex: 1 1 70%;
+}
+
+.factura-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1 1 25%;
+}
+
+.btn-ver-pdf:hover {
+    background-color: #d6da6a;
+    transform: scale(1.05);
+}
+
 @media (max-width: 1024px) {
 .title h1 {
     font-size: 2.5rem;

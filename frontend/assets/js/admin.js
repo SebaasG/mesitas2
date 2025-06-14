@@ -52,7 +52,7 @@ function mostrarFacturasEnModal(facturas) {
             facturaEl.classList.add('factura-item');
 
             facturaEl.innerHTML = `
-                <h6>Factura ID: ${f.id}</h6>
+                <h3>Factura ID: ${f.id}</h3>
                 <p><strong>Tipo:</strong> ${f.tipo_factura}</p>
                 <p><strong>Usuario:</strong> ${f.nombre} ${f.apellido}</p>
                 <p><strong>Fecha emisión:</strong> ${f.fecha_emision}</p>
@@ -62,7 +62,7 @@ function mostrarFacturasEnModal(facturas) {
                         ? `<button class="btn-descargar" data-id="${f.id}">Ver PDF</button>`
                         : '<em>Sin archivo</em>'
                 }
-                <hr>
+                
             `;
             contenedor.appendChild(facturaEl);
         });
