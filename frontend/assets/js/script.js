@@ -33,22 +33,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Captura de datos del formulario
         const tipo_id = document.getElementById('tipo_id').value;
-        const fecha_emision = document.getElementById('fecha_emision').value;
-        const fecha_vencimiento = document.getElementById('fecha_vencimiento').value;
+        const fecha_pago = document.getElementById('fecha_pago').value;
         const total = totalInput;
         const archivo = archivoInput.files[0];
 
         const formData = new FormData();
         formData.append('tipo_id', tipo_id);
-        formData.append('fecha_emision', fecha_emision);
-        formData.append('fecha_vencimiento', fecha_vencimiento);
+        formData.append('fecha_pago', fecha_pago);
         formData.append('total', total);
         formData.append('archivo', archivo);
 
         console.log('Subiendo factura con los siguientes datos:');
         console.log('Tipo ID:', tipo_id);
-        console.log('Fecha Emisión:', fecha_emision);
-        console.log('Fecha Vencimiento:', fecha_vencimiento);
+        console.log('Fecha pago:', fecha_pago);
         console.log('Total:', total);
         console.log('Archivo:', archivo?.name || 'No se seleccionó archivo');
 
@@ -172,8 +169,9 @@ async function verArchivos() {
                 <div class="card-body">
                     <h5 class="card-title">Factura N° ${factura.id}</h5>
                     <p class="card-text"><strong>Tipo:</strong> ${tipoTexto}</p>
-                    <p class="card-text"><strong>Fecha de emisión:</strong> ${new Date(factura.fecha_emision).toLocaleDateString()}</p>
+                    <p class="card-text"><strong>Fecha de Pago:</strong> ${new Date(factura.fecha_pago).toLocaleDateString()}</p>
                     <p class="card-text"><strong>Total:</strong> $${parseFloat(factura.total).toLocaleString('es-CL')}</p>
+                    <p class="card-text"><strong>Fecha de pago:</strong> ${new Date(factura.fecha_pago).toLocaleDateString()}</p>
                     ${factura.descripcion ? `<p class="card-text"><strong>Descripción:</strong> ${factura.descripcion}</p>` : ''}
                     ${descargaDisponible}
                     <button class="btn btn-danger btn-sm mt-2" onclick="eliminarFactura(${factura.id})">Eliminar</button>

@@ -60,8 +60,8 @@ function mostrarFacturasEnModal(facturas) {
                 <h3>Factura ID: ${f.id}</h3>
                 <p><strong>Tipo:</strong> ${f.tipo_factura}</p>
                 <p><strong>Usuario:</strong> ${f.nombre} ${f.apellido}</p>
-                <p><strong>Fecha emisión:</strong> ${f.fecha_emision}</p>
                 <p><strong>Total:</strong> $${f.total}</p>
+                <p><strong>Fecha de Pago:</strong> ${new Date(f.fecha_pago).toLocaleDateString()}</p>
                 <p><strong>Estado:</strong> 
                     <span style="color: ${f.estado === 'APROBADA' ? 'green' : f.estado === 'DESAPROBADA' ? 'red' : 'orange'};">
                         ${f.estado}

@@ -69,22 +69,22 @@ const upload = multer({
 // };
 const subirFactura = async (req, res) => {
     try {
-        const { tipo_id, fecha_emision, fecha_vencimiento, total } = req.body;
+        const { tipo_id, fecha_pago, total } = req.body;
         const usuario_id = req.user.id;
 
         // Guardar ruta relativa
         const archivo_pdf = req.file ? path.join('uploads', 'facturas', req.file.filename) : null;
 
-        if (!tipo_id || !fecha_emision || !fecha_vencimiento || !total || !archivo_pdf) {
+        if (!tipo_id|| !total || !archivo_pdf || !fecha_pago) {
             return res.status(400).json({ error: 'Todos los campos son obligatorios' });
         }
 
         const result = await query(
             `INSERT INTO facturas 
-            (usuario_id, tipo_id, fecha_emision, fecha_vencimiento, total, archivo_pdf) 
-            VALUES ($1, $2, $3, $4, $5, $6) 
+            (usuario_id, tipo_id, total, archivo_pdf,fecha_pago) 
+            VALUES ($1, $2, $3, $4, $5) 
             RETURNING *`,
-            [usuario_id, tipo_id, fecha_emision, fecha_vencimiento, total, archivo_pdf]
+            [usuario_id, tipo_id, total, archivo_pdf,fecha_pago]
         );
 
         await query(
@@ -165,7 +165,8 @@ const obtenerFacturasUsuario = async (req, res) => {
             FROM facturas f 
             JOIN TipoFactura tf ON f.tipo_id = tf.id 
             WHERE f.usuario_id = $1 
-            ORDER BY f.fecha_emision DESC`,
+            
+            ORDER BY f.fecha_pago DESC`,
             [req.user.id]
         );
 
@@ -190,7 +191,7 @@ const obtenerTodasFacturas = async (req, res) => {
             FROM facturas f 
             JOIN TipoFactura tf ON f.tipo_id = tf.id 
             JOIN usuarios u ON f.usuario_id = u.id 
-            ORDER BY f.fecha_emision DESC`
+            ORDER BY f.fecha_pago DESC`
         );
         res.json(result.rows);
     } catch (error) {
@@ -262,7 +263,7 @@ const obtenerFacturasPorParcela = async (req, res) => {
              JOIN usuarioParcela up ON u.id = up.usuario_id
              JOIN parcelas p ON up.parcela_id = p.id
              WHERE p.numero_parcela = $1
-             ORDER BY f.fecha_emision DESC`,
+             ORDER BY f.fecha_pago DESC`,
             [numeroParcela]
         );
 

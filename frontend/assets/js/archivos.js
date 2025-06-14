@@ -65,7 +65,6 @@ function handleModalHidden() {
 document.addEventListener('DOMContentLoaded', () => {
     const uploadForm = document.getElementById('uploadForm');
     const uploadModal = document.getElementById('uploadModal');
-    const logoutBtn = document.getElementById('logoutBtn');
 
     if (uploadForm) {
         uploadForm.addEventListener('submit', handleFormSubmit);
