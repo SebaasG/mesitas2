@@ -13,6 +13,7 @@ const authRoutes = require('./routes/authRoutes');
 const facturaRoutes = require('./routes/facturaRoutes');
 const userRoutes = require('./routes/userRoutes');
 const historialRouter = require('./routes/HistorialRouter');
+const adminRoutes = require('./routes/BDrouter');
 
 // Inicialización de la aplicación
 const app = express();
@@ -42,6 +43,7 @@ app.use('/api/auth', authRoutes);           // Login
 app.use('/api/usuarios', userRoutes);       // Registro y gestión de usuarios
 app.use('/api/facturas', facturaRoutes);    // Facturas (subir, ver, eliminar, descargar)
 app.use('/api/historial', historialRouter); // Ver historial
+app.use('/api/extraer', adminRoutes);
 
 // Ruta de prueba para validar conexión a la DB
 app.get('/api/test-db', async (req, res) => {

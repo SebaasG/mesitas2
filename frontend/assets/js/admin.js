@@ -265,3 +265,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+document.getElementById('btnDescargarTodo').addEventListener('click', async () => {
+    const token = localStorage.getItem('token');
+
+    try {
+        const response = await fetch('http://localhost:3000/api/extraer/exportar-facturas', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error('Error al descargar el archivo');
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'facturas.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        alert('Error al descargar Excel: ' + error.message);
+    }
+});
