@@ -1,15 +1,20 @@
-// ✅ Asignar eventos a cada punto de parcela
+
+if (typeof ultimaParcelaSeleccionada === 'undefined') {
+    var ultimaParcelaSeleccionada = null;
+}
+
 document.querySelectorAll('.parcel-point').forEach(point => {
     point.addEventListener('click', async () => {
         const numero = point.getAttribute('data-parcel');
         const numeroParcela = 'P' + numero.padStart(3, '0'); // Ej: "P001"
         const token = localStorage.getItem('token');
+        
 
         if (!token) {
             alert('No estás autenticado. Inicia sesión para continuar.');
             return;
         }
-
+        ultimaParcelaSeleccionada = numeroParcela; // Guardar la última parcela seleccionada
         try {
             // Solicitud para obtener facturas de la parcela
             const response = await fetch(`http://localhost:3000/api/facturas/parcela/${numeroParcela}`, {
@@ -51,18 +56,25 @@ function mostrarFacturasEnModal(facturas) {
             const facturaEl = document.createElement('div');
             facturaEl.classList.add('factura-item');
 
-            facturaEl.innerHTML = `
+             facturaEl.innerHTML = `
                 <h3>Factura ID: ${f.id}</h3>
                 <p><strong>Tipo:</strong> ${f.tipo_factura}</p>
                 <p><strong>Usuario:</strong> ${f.nombre} ${f.apellido}</p>
                 <p><strong>Fecha emisión:</strong> ${f.fecha_emision}</p>
                 <p><strong>Total:</strong> $${f.total}</p>
+                <p><strong>Estado:</strong> 
+                    <span style="color: ${f.estado === 'APROBADA' ? 'green' : f.estado === 'DESAPROBADA' ? 'red' : 'orange'};">
+                        ${f.estado}
+                    </span>
+                </p>
                 ${
                     f.archivo_pdf
                         ? `<button class="btn-descargar" data-id="${f.id}">Ver PDF</button>`
                         : '<em>Sin archivo</em>'
                 }
-                
+                <br>
+                <button class="btn-aprobar" data-id="${f.id}" ${f.estado === 'APROBADA' ? 'disabled' : ''}>Aprobar</button>
+                <button class="btn-desaprobar" data-id="${f.id}" ${f.estado !== 'APROBADA' ? 'disabled' : ''}>Desaprobar</button>
             `;
             contenedor.appendChild(facturaEl);
         });
@@ -113,6 +125,21 @@ function mostrarFacturasEnModal(facturas) {
                 }
             });
         });
+
+        // Aprobar y desaprobar facturas
+        contenedor.querySelectorAll('.btn-aprobar').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                await cambiarEstadoFactura(id, 'APROBADA');
+            });
+        });
+
+        contenedor.querySelectorAll('.btn-desaprobar').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-id');
+                await cambiarEstadoFactura(id, 'DESAPROBADA');
+            });
+        });
     }
 
     // ✅ Mostrar el modal manualmente (sin fade de Bootstrap)
@@ -139,6 +166,49 @@ function mostrarFacturasEnModal(facturas) {
             modal.setAttribute('aria-hidden', 'true');
         }
     };
+}
+
+
+async function cambiarEstadoFactura(id, nuevoEstado) {
+    const token = localStorage.getItem('token');
+    if (!token) return alert('No estás autenticado.');
+
+    const confirmar = confirm(`¿Seguro que deseas marcar la factura #${id} como ${nuevoEstado}?`);
+    if (!confirmar) return;
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/facturas/actualizar/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ estado: nuevoEstado })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert(`Factura ${id} actualizada a "${nuevoEstado}".`);
+
+    // Volver a pedir las facturas de la parcela
+    const facturasResponse = await fetch(`http://localhost:3000/api/facturas/parcela/${ultimaParcelaSeleccionada}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    });
+
+    const facturas = await facturasResponse.json();
+    mostrarFacturasEnModal(facturas); // ✅ Refresca el modal con datos actualizados
+        } else {
+            alert('Error: ' + (data.error || 'No se pudo cambiar el estado.'));
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Error al cambiar el estado de la factura.');
+    }
 }
 
 // ✅ Obtener historial de acciones (visible para admins)

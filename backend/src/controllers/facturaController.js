@@ -99,6 +99,55 @@ const subirFactura = async (req, res) => {
     }
 };
 
+const AprobarFactura = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { estado } = req.body;
+
+        // Validar estado permitido
+        const estadosPermitidos = ['APROBADA', 'DESAPROBADA'];
+        if (!estadosPermitidos.includes(estado)) {
+            return res.status(400).json({ error: 'Estado no válido' });
+        }
+
+        // Verificar que el usuario sea administrador
+        if (req.user.rol !== 'administrador') {
+            return res.status(403).json({ error: 'No tienes permiso para cambiar el estado de facturas' });
+        }
+
+        // Buscar factura
+        const facturaResult = await query('SELECT * FROM facturas WHERE id = $1', [id]);
+        if (facturaResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Factura no encontrada' });
+        }
+
+        // Actualizar estado
+        const result = await query(
+            'UPDATE facturas SET estado = $1 WHERE id = $2 RETURNING *',
+            [estado, id]
+        );
+
+        // Registrar en historial
+        await query(
+            'INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion) VALUES ($1, $2, $3, $4)',
+            [req.user.id, estado === 'APROBADA' ? 'APROBAR' : 'DESAPROBAR', 'facturas', `Factura con ID ${id} marcada como ${estado}`]
+        );
+
+        res.json({
+            success: true,
+            message: `Factura actualizada a "${estado}" correctamente`,
+            factura: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error('Error al actualizar estado de factura:', error);
+        res.status(500).json({ error: 'Error al cambiar el estado de la factura' });
+    }
+};
+
+
+
+
 
 // Obtener facturas del usuario
 const obtenerFacturasUsuario = async (req, res) => {
@@ -264,5 +313,6 @@ module.exports = {
     obtenerTodasFacturas,
     descargarFactura,
     obtenerFacturasPorParcela,
-    EliminarFactura
+    EliminarFactura,
+    AprobarFactura
 }; 
