@@ -99,6 +99,7 @@ const subirFactura = async (req, res) => {
     }
 };
 
+
 const AprobarFactura = async (req, res) => {
     try {
         const { id } = req.params;
@@ -240,6 +241,54 @@ const EliminarFactura = async (req, res) => {
 };
 
 
+const EliminarFacturaUsuario = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Buscar la factura
+        const facturaResult = await query('SELECT * FROM facturas WHERE id = $1', [id]);
+        if (facturaResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Factura no encontrada' });
+        }
+
+        const factura = facturaResult.rows[0];
+
+        // 2. Verificar estado permitido
+        if (factura.estado !== 'pendiente' && factura.estado !== 'DESAPROBADA') {
+            return res.status(403).json({ error: 'Solo se pueden eliminar facturas pendientes o desaprobadas' });
+        }
+
+        // 3. Eliminar archivo si existe
+        if (factura.archivo_pdf) {
+            const filePath = path.join(__dirname, '..', factura.archivo_pdf.replace(/\\/g, '/'));
+            try {
+                if (fs.existsSync(filePath)) {
+                    await fs.promises.unlink(filePath);
+                    console.log(`Archivo eliminado: ${filePath}`);
+                } else {
+                    console.warn(`Archivo no encontrado para eliminar: ${filePath}`);
+                }
+            } catch (err) {
+                console.warn(`Error eliminando archivo: ${filePath}`, err.message);
+            }
+        }
+
+        // 4. Eliminar factura de la base de datos
+        const result = await query('DELETE FROM facturas WHERE id = $1 RETURNING *', [id]);
+
+        // 5. Guardar en historial
+        await query(
+            'INSERT INTO historial (usuario_id, accion, tabla_afectada, descripcion) VALUES ($1, $2, $3, $4)',
+            [req.user.id, 'ELIMINAR', 'facturas', `Factura con ID ${id} eliminada`]
+        );
+
+        res.json({ message: 'Factura eliminada correctamente', factura: result.rows[0] });
+
+    } catch (error) {
+        console.error('Error al eliminar factura:', error);
+        res.status(500).json({ error: 'Error al eliminar factura' });
+    }
+};
 
 // Obtener facturas por número de parcela
 const obtenerFacturasPorParcela = async (req, res) => {
@@ -315,5 +364,6 @@ module.exports = {
     descargarFactura,
     obtenerFacturasPorParcela,
     EliminarFactura,
-    AprobarFactura
+    AprobarFactura,
+    EliminarFacturaUsuario
 }; 
