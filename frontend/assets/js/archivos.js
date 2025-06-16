@@ -34,7 +34,7 @@ function handleFormSubmit(e) {
     // Validación de campos obligatorios
     if (!mes || !mensaje || !archivo) {
         alert('❌ Por favor, complete todos los campos obligatorios.');
-        return;
+        return;!archivo.name
     }
 
     // Validación de formato de archivo

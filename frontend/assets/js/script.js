@@ -209,9 +209,16 @@ async function descargarFactura(id) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
 
+        // ⬅️ Aquí obtenemos el nombre real desde el header
+        let filename = `factura_${id}`;
+        const disposition = response.headers.get('Content-Disposition');
+        if (disposition && disposition.includes('filename=')) {
+            filename = disposition.split('filename=')[1].replace(/['"]/g, '');
+        }
+
         const a = document.createElement('a');
         a.href = url;
-        a.download = `factura_${id}.pdf`;
+        a.download = filename;  // 🔁 Usa el nombre real del archivo
         document.body.appendChild(a);
         a.click();
         a.remove();

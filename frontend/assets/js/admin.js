@@ -1,22 +1,22 @@
-
 if (typeof ultimaParcelaSeleccionada === 'undefined') {
     var ultimaParcelaSeleccionada = null;
 }
 
+// Evento para cada punto de parcela
 document.querySelectorAll('.parcel-point').forEach(point => {
     point.addEventListener('click', async () => {
         const numero = point.getAttribute('data-parcel');
-        const numeroParcela = 'P' + numero.padStart(3, '0'); // Ej: "P001"
+        const numeroParcela = 'P' + numero.padStart(3, '0');
         const token = localStorage.getItem('token');
-        
 
         if (!token) {
             alert('No estás autenticado. Inicia sesión para continuar.');
             return;
         }
-        ultimaParcelaSeleccionada = numeroParcela; // Guardar la última parcela seleccionada
+
+        ultimaParcelaSeleccionada = numeroParcela;
+
         try {
-            // Solicitud para obtener facturas de la parcela
             const response = await fetch(`http://localhost:3000/api/facturas/parcela/${numeroParcela}`, {
                 method: 'GET',
                 headers: {
@@ -40,23 +40,20 @@ document.querySelectorAll('.parcel-point').forEach(point => {
     });
 });
 
-
-// ✅ Muestra las facturas en un modal personalizado
+// ✅ Mostrar facturas en el modal
 function mostrarFacturasEnModal(facturas) {
     const modal = document.getElementById('facturasModal');
     const contenedor = document.getElementById('facturasContainer');
     contenedor.innerHTML = '';
 
-    // Si no hay facturas
     if (!facturas.length) {
         contenedor.innerHTML = '<p>No hay facturas para esta parcela.</p>';
     } else {
-        // Renderizar cada factura
         facturas.forEach(f => {
             const facturaEl = document.createElement('div');
             facturaEl.classList.add('factura-item');
 
-             facturaEl.innerHTML = `
+            facturaEl.innerHTML = `
                 <h3>Factura ID: ${f.id}</h3>
                 <p><strong>Tipo:</strong> ${f.tipo_factura}</p>
                 <p><strong>Usuario:</strong> ${f.nombre} ${f.apellido}</p>
@@ -67,10 +64,9 @@ function mostrarFacturasEnModal(facturas) {
                         ${f.estado}
                     </span>
                 </p>
-                ${
-                    f.archivo_pdf
-                        ? `<button class="btn-descargar" data-id="${f.id}">Ver PDF</button>`
-                        : '<em>Sin archivo</em>'
+                ${f.archivo_pdf
+                    ? `<button class="btn-descargar" data-id="${f.id}">Ver PDF</button>`
+                    : '<em>Sin archivo</em>'
                 }
                 <br>
                 <button class="btn-aprobar" data-id="${f.id}" ${f.estado === 'APROBADA' ? 'disabled' : ''}>Aprobar</button>
@@ -79,78 +75,14 @@ function mostrarFacturasEnModal(facturas) {
             contenedor.appendChild(facturaEl);
         });
 
-        // Asociar eventos a botones de descarga
-        const botonesDescarga = contenedor.querySelectorAll('.btn-descargar');
-        botonesDescarga.forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.getAttribute('data-id');
-                const token = localStorage.getItem('token');
-
-                if (!token) {
-                    alert('No tienes sesión activa. Por favor inicia sesión.');
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`http://localhost:3000/api/facturas/descargar/${id}`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/pdf'
-                        }
-                    });
-
-                    if (!response.ok) {
-                        if (response.status === 403) {
-                            throw new Error('No tienes permiso para acceder a esta factura.');
-                        } else if (response.status === 401) {
-                            throw new Error('Sesión no válida o expirada.');
-                        } else {
-                            throw new Error('Error al descargar el PDF.');
-                        }
-                    }
-
-                    // Descargar PDF desde el blob
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `factura_${id}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                } catch (error) {
-                    alert('Error: ' + error.message);
-                }
-            });
-        });
-
-        // Aprobar y desaprobar facturas
-        contenedor.querySelectorAll('.btn-aprobar').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.getAttribute('data-id');
-                await cambiarEstadoFactura(id, 'APROBADA');
-            });
-        });
-
-        contenedor.querySelectorAll('.btn-desaprobar').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const id = btn.getAttribute('data-id');
-                await cambiarEstadoFactura(id, 'DESAPROBADA');
-            });
-        });
+        agregarEventosBotones();
     }
 
-    // ✅ Mostrar el modal manualmente (sin fade de Bootstrap)
+    // Mostrar el modal
     modal.classList.remove('fade');
     modal.style.display = 'block';
     modal.setAttribute('aria-hidden', 'false');
 
-    // ✅ Evitar que el foco quede en un elemento oculto
-    if (document.activeElement) document.activeElement.blur();
-
-    // ✅ Cerrar modal con botón "X"
     const closeButton = modal.querySelector('.btn-close');
     if (closeButton) {
         closeButton.onclick = () => {
@@ -159,7 +91,6 @@ function mostrarFacturasEnModal(facturas) {
         };
     }
 
-    // ✅ Cerrar modal al hacer clic fuera de él
     window.onclick = (event) => {
         if (event.target === modal) {
             modal.style.display = 'none';
@@ -168,12 +99,74 @@ function mostrarFacturasEnModal(facturas) {
     };
 }
 
+// ✅ Eventos de botones de descarga, aprobar y desaprobar
+function agregarEventosBotones() {
+    const contenedor = document.getElementById('facturasContainer');
 
+    contenedor.querySelectorAll('.btn-descargar').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.getAttribute('data-id');
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('No tienes sesión activa.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/facturas/descargar/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/pdf'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error al descargar el archivo');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+
+                let filename = `factura_${id}`;
+                const disposition = response.headers.get('Content-Disposition');
+                if (disposition && disposition.includes('filename=')) {
+                    filename = disposition.split('filename=')[1].replace(/['"]/g, '');
+                }
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+    });
+
+    contenedor.querySelectorAll('.btn-aprobar').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            cambiarEstadoFactura(id, 'APROBADA');
+        });
+    });
+
+    contenedor.querySelectorAll('.btn-desaprobar').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-id');
+            cambiarEstadoFactura(id, 'DESAPROBADA');
+        });
+    });
+}
+
+// ✅ Cambiar estado de la factura
 async function cambiarEstadoFactura(id, nuevoEstado) {
     const token = localStorage.getItem('token');
     if (!token) return alert('No estás autenticado.');
 
-    const confirmar = confirm(`¿Seguro que deseas marcar la factura #${id} como ${nuevoEstado}?`);
+    const confirmar = confirm(`¿Deseas cambiar el estado a "${nuevoEstado}"?`);
     if (!confirmar) return;
 
     try {
@@ -190,28 +183,25 @@ async function cambiarEstadoFactura(id, nuevoEstado) {
 
         if (response.ok) {
             alert(`Factura ${id} actualizada a "${nuevoEstado}".`);
+            const facturasResponse = await fetch(`http://localhost:3000/api/facturas/parcela/${ultimaParcelaSeleccionada}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
 
-    // Volver a pedir las facturas de la parcela
-    const facturasResponse = await fetch(`http://localhost:3000/api/facturas/parcela/${ultimaParcelaSeleccionada}`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        }
-    });
-
-    const facturas = await facturasResponse.json();
-    mostrarFacturasEnModal(facturas); // ✅ Refresca el modal con datos actualizados
+            const facturas = await facturasResponse.json();
+            mostrarFacturasEnModal(facturas);
         } else {
             alert('Error: ' + (data.error || 'No se pudo cambiar el estado.'));
         }
     } catch (error) {
-        console.error(error);
-        alert('Error al cambiar el estado de la factura.');
+        alert('Error al cambiar el estado: ' + error.message);
     }
 }
 
-// ✅ Obtener historial de acciones (visible para admins)
+// ✅ Historial visible para administradores
 async function obtenerHistorial() {
     try {
         const response = await fetch('http://localhost:3000/api/historial/historial', {
@@ -223,8 +213,6 @@ async function obtenerHistorial() {
         });
 
         const data = await response.json();
-        console.log('Historial recibido:', data);
-
         const historialList = document.getElementById('historial-list');
         historialList.innerHTML = '';
 
@@ -251,43 +239,47 @@ async function obtenerHistorial() {
     }
 }
 
-// ✅ Configuraciones generales al cargar la página
+// ✅ Configuración inicial
 document.addEventListener('DOMContentLoaded', () => {
     obtenerHistorial();
 
-    // Botón de cerrar sesión
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', function () {
+        logoutBtn.addEventListener('click', () => {
             sessionStorage.clear();
             localStorage.clear();
             window.location.replace('/index.html');
         });
     }
-});
-document.getElementById('btnDescargarTodo').addEventListener('click', async () => {
-    const token = localStorage.getItem('token');
 
-    try {
-        const response = await fetch('http://localhost:3000/api/extraer/exportar-facturas', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
+    const descargarTodoBtn = document.getElementById('btnDescargarTodo');
+    if (descargarTodoBtn) {
+        descargarTodoBtn.addEventListener('click', async () => {
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch('http://localhost:3000/api/extraer/exportar-facturas', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error al descargar el archivo');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'facturas.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+
+            } catch (error) {
+                alert('Error al descargar Excel: ' + error.message);
             }
         });
-
-        if (!response.ok) throw new Error('Error al descargar el archivo');
-
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'facturas.xlsx';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-    } catch (error) {
-        alert('Error al descargar Excel: ' + error.message);
     }
 });

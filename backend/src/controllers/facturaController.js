@@ -293,20 +293,26 @@ const descargarFactura = async (req, res) => {
         }
 
         if (!factura.archivo_pdf) {
-            return res.status(404).json({ error: 'No hay archivo PDF asociado' });
+            return res.status(404).json({ error: 'No hay archivo asociado a la factura' });
         }
 
-        // Asegúrate de subir el archivo a `backend/uploads/...`
+
         const relativePath = factura.archivo_pdf.replace(/\\/g, '/');
+        console.log('Ruta relativa del archivo:', relativePath);
         const filePath = path.join(__dirname, '..', '..', relativePath);
+        const filename = path.basename(filePath); // obtiene 'factura-123456789.png' o .pdf, etc.
 
         await fs.access(filePath); // lanza error si no existe
-        res.download(filePath);
+
+        // Descargar usando el nombre exacto del archivo
+        res.download(filePath, filename);
     } catch (error) {
         console.error('Error al descargar factura:', error);
         res.status(500).json({ error: 'Error al descargar la factura' });
     }
 };
+
+
 
 module.exports = {
     subirFactura,
