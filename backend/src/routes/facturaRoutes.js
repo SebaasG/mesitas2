@@ -9,7 +9,8 @@ const {
     descargarFactura,
     obtenerFacturasPorParcela,
     EliminarFactura,
-    AprobarFactura
+    AprobarFactura,
+    EliminarFacturaUsuario
     
 } = require('../controllers/facturaController');
 
@@ -35,6 +36,7 @@ router.delete('/eliminar/:id', authMiddleware, EliminarFactura);
 router.get('/descargar/:id', authMiddleware, descargarFactura);
 router.get('/parcela/:numero', authMiddleware, obtenerFacturasPorParcela);
 router.patch('/actualizar/:id', authMiddleware,AprobarFactura); // Actualizar factura
+router.delete('/eliminarUser/:id',authMiddleware, EliminarFacturaUsuario); // Eliminar factura por usuario
 
 router.delete('/:id', authMiddleware, EliminarFactura);
 

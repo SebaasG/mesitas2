@@ -171,7 +171,7 @@ async function verArchivos() {
                     <p class="card-text"><strong>Tipo:</strong> ${tipoTexto}</p>
                     <p class="card-text"><strong>Fecha de Pago:</strong> ${new Date(factura.fecha_pago).toLocaleDateString()}</p>
                     <p class="card-text"><strong>Total:</strong> $${parseFloat(factura.total).toLocaleString('es-CL')}</p>
-                    <p class="card-text"><strong>Fecha de pago:</strong> ${new Date(factura.fecha_pago).toLocaleDateString()}</p>
+                    <p class="card-text"><strong>Estado:</strong> ${factura.estado}</p>
                     ${factura.descripcion ? `<p class="card-text"><strong>Descripción:</strong> ${factura.descripcion}</p>` : ''}
                     ${descargaDisponible}
                     <button class="btn btn-danger btn-sm mt-2" onclick="eliminarFactura(${factura.id})">Eliminar</button>
@@ -238,7 +238,7 @@ async function eliminarFactura(id) {
     if (!confirm('¿Estás seguro de que deseas eliminar esta factura?')) return;
 
     try {
-        const response = await fetch(`http://localhost:3000/api/facturas/eliminar/${id}`, {
+        const response = await fetch(`http://localhost:3000/api/facturas/eliminarUser/${id}`, {
             method: 'DELETE',
             headers: {
                 'Authorization': `Bearer ${token}`
