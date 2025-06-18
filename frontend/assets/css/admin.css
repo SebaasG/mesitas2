@@ -175,7 +175,6 @@ background-color: transparent;
 }
 
 .modal-title {
-font-family: 'Playfair Display', serif;
 font-size: 1.6rem;
 font-weight: 600;
 color: #333;
@@ -224,7 +223,7 @@ transform: scale(1.05);
 }
 
 .btn-aprobar {
-background-color: #28a745; /* verde */
+background-color: #28a745;
 color: white;
 border: none;
 padding: 0.5em 1em;
@@ -244,7 +243,7 @@ cursor: not-allowed;
 }
 
 .btn-desaprobar {
-background-color: #dc3545; /* rojo */
+background-color: #dc3545;
 color: white;
 border: none;
 padding: 0.5em 1em;
@@ -264,9 +263,9 @@ cursor: not-allowed;
 }
 
 #btnDescargarTodo {
-background-color: #2e5f3e; /* verde mata oscuro */
-color: #f8f3e7; /* crema claro */
-border: 2px solid #c5dca0; /* borde verde hoja seca claro */
+background-color: #2e5f3e; 
+color: #f8f3e7; 
+border: 2px solid #c5dca0; 
 padding: 0.65em 1.4em;
 font-size: 1.05rem;
 font-family: 'Georgia', serif;
@@ -399,6 +398,7 @@ background-color: #e74c3c;
 }
 
 
+
 @media (max-width: 1024px) {
 .title h1 {
 font-size: 1.6rem;
@@ -425,7 +425,7 @@ font-size: 1.3rem;
 @media (max-width: 768px) {
 
 body {
-    overflow-y: auto; /* permite scroll si el contenido es alto */
+    overflow-y: auto;
   }
 
   .content {
@@ -515,7 +515,7 @@ font-size: 11px;
   left: 0; top: 0;
   width: 100%; height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: rgba(0, 0, 0, 0.5); /* oscurece el fondo */
 }
 
 .modal-fechas-dialog {
@@ -526,7 +526,7 @@ font-size: 11px;
 }
 
 .modal-fechas-content {
-  background-color: #fff;
+  background-color: rgba(233, 237, 123, 0.6);
   padding: 20px;
   border-radius: 10px;
   width: 300px;
@@ -554,7 +554,7 @@ font-size: 11px;
 }
 
 .btn-fechas-primary {
-  background-color: #007bff;
+  background-color: #10811b;
   color: white;
   padding: 8px 12px;
   border: none;
@@ -563,7 +563,7 @@ font-size: 11px;
 }
 
 .btn-fechas-secondary {
-  background-color: gray;
+  background-color: rgb(169, 18, 18);
   color: white;
   padding: 8px 12px;
   border: none;
@@ -576,4 +576,11 @@ font-size: 11px;
   padding: 6px;
   margin-top: 5px;
   margin-bottom: 10px;
+}
+
+.modal-fechas-wrapper {
+  background-color: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
