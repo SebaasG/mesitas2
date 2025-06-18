@@ -50,7 +50,34 @@
                 </div>
             </div>
 
-            <button id="btnDescargarTodo" class="btn btn-success">📥 Descargar Excel</button>
+           <!-- Botón que abre el modal -->
+
+<button class="btn btn-success"  id="btnDescargarTodo" onclick="abrirModalFechas()"> 📥 Exportar facturas por fecha</button>
+
+<!-- Modal personalizado de selección de fechas -->
+<div class="modal-fechas-overlay" id="modalFechas">
+  <div class="modal-fechas-dialog">
+    <div class="modal-fechas-content">
+      <div class="modal-fechas-header">
+        <h5 class="modal-fechas-title">Seleccionar rango de fechas</h5>
+        <button type="button" class="btn-fechas-close" onclick="cerrarModal()">×</button>
+      </div>
+      <div class="modal-fechas-body">
+        <label for="fechaInicio">Fecha Inicio:</label>
+        <input type="date" id="fechaInicio" class="input-fechas" />
+
+        <label for="fechaFin">Fecha Fin:</label>
+        <input type="date" id="fechaFin" class="input-fechas" />
+      </div>
+      <div class="modal-fechas-footer">
+        <button type="button" class="btn-fechas-secondary" onclick="cerrarModal()">Cancelar</button>
+        <button type="button" class="btn-fechas-primary" onclick="descargarExcel()">Descargar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
 
             <div class="modal fade" id="facturasModal" tabindex="-1" aria-labelledby="facturasModalLabel"

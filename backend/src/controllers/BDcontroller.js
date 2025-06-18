@@ -3,24 +3,31 @@ const ExcelJS = require('exceljs');
 
 const exportarFacturasExcel = async (req, res) => {
     try {
+        const { fechaInicio, fechaFin } = req.query;
+
+        if (!fechaInicio || !fechaFin) {
+            return res.status(400).json({ error: 'Fechas requeridas' });
+        }
+
         const result = await query(`
-           SELECT 
-    f.id AS id_factura,
-    tf.nombre AS tipo_factura,
-    u.nombre AS nombre_usuario,
-    u.apellido AS apellido_usuario,
-    p.numero_parcela,
-    p.ubicacion AS descripcion_parcela,
-    f.fecha_pago,
-    f.total,
-    f.estado,
-    f.archivo_pdf
-FROM facturas f
-JOIN usuarios u ON f.usuario_id = u.id
-JOIN usuarioParcela up ON up.usuario_id = u.id
-JOIN parcelas p ON up.parcela_id = p.id
-JOIN TipoFactura tf ON f.tipo_id = tf.id;
-        `);
+            SELECT 
+                f.id AS id_factura,
+                tf.nombre AS tipo_factura,
+                u.nombre AS nombre_usuario,
+                u.apellido AS apellido_usuario,
+                p.numero_parcela,
+                p.ubicacion AS descripcion_parcela,
+                f.fecha_pago,
+                f.total,
+                f.estado,
+                f.archivo_pdf
+            FROM facturas f
+            JOIN usuarios u ON f.usuario_id = u.id
+            JOIN usuarioParcela up ON up.usuario_id = u.id
+            JOIN parcelas p ON up.parcela_id = p.id
+            JOIN TipoFactura tf ON f.tipo_id = tf.id
+            WHERE f.fecha_pago BETWEEN $1 AND $2;
+        `, [fechaInicio, fechaFin]);
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('Facturas');
@@ -56,5 +63,6 @@ JOIN TipoFactura tf ON f.tipo_id = tf.id;
         res.status(500).json({ error: 'Error al exportar facturas' });
     }
 };
+
 
 module.exports = { exportarFacturasExcel };

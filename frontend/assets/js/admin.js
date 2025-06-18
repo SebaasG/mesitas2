@@ -251,35 +251,55 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.replace('/index.html');
         });
     }
-
-    const descargarTodoBtn = document.getElementById('btnDescargarTodo');
-    if (descargarTodoBtn) {
-        descargarTodoBtn.addEventListener('click', async () => {
-            const token = localStorage.getItem('token');
-
-            try {
-                const response = await fetch('http://localhost:3000/api/extraer/exportar-facturas', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) throw new Error('Error al descargar el archivo');
-
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'facturas.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(url);
-
-            } catch (error) {
-                alert('Error al descargar Excel: ' + error.message);
-            }
-        });
-    }
 });
+
+ function abrirModalFechas() {
+    document.getElementById('modalFechas').style.display = 'block';
+  }
+
+  function cerrarModal() {
+    document.getElementById('modalFechas').style.display = 'none';
+  }
+
+  async function descargarExcel() {
+    const fechaInicio = document.getElementById('fechaInicio').value;
+    const fechaFin = document.getElementById('fechaFin').value;
+
+    if (!fechaInicio || !fechaFin) {
+      alert('Por favor selecciona ambas fechas.');
+      return;
+    }
+
+    if (fechaInicio > fechaFin) {
+      alert('La fecha de inicio no puede ser mayor que la fecha de fin.');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    const url = `http://localhost:3000/api/extraer/exportar-facturas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Error al generar el Excel');
+
+      const blob = await response.blob();
+      const urlDescarga = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = urlDescarga;
+      a.download = 'facturas_filtradas.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(urlDescarga);
+
+      cerrarModal();
+    } catch (error) {
+      alert('Error al descargar Excel: ' + error.message);
+    }
+  }
